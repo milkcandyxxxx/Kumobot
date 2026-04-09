@@ -1,0 +1,7 @@
+# 云宝配置文件
+# onebots的连接配置
+onebots:
+#  WebSocket 地址
+  ws_url : "ws://127.0.0.1:6727/kook/46609/onebot/v12"
+#  http地址
+  http_url : "http://127.0.0.1:6727/kook/46609/onebot/v12"
