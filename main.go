@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -173,20 +174,32 @@ func parseEvent(data []byte) (*Event, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &event, nil
 }
 
-// 事件处理
+// handleEvent 事件处理
 func handleEvent(event *Event) {
 	// 目前只处理事件
 	if event.Type != "message" {
 		return
 	}
-	log.Println(event.ID)
+	// 简单的连接测试echo
+	msg := processCommand(event.AltMessage)
+	sendMessage(event, msg)
+}
 
-	if event.AltMessage == "ping" {
-		sendMessage(event, "pong")
+// processCommand 命令处理
+func processCommand(msg string) string {
+	//  首尾空格
+	msg = strings.TrimSpace(msg)
+	// 是否以"/"开头
+	if !strings.HasPrefix(msg, "/echo") {
+		return ""
 	}
+	returnedMsg := msg[5:]
+
+	return returnedMsg
 }
 
 // sendMessage 发送消息
@@ -231,10 +244,11 @@ func sendMessage(event *Event, msg string) {
 			"message":     []MessageSegment{message},
 		}
 		// 这里一张少东西，后面研究一下
+		// onbots里没有严格按照kook的guild_id（服务器）channel_id（频道），而是统一归为group（注：但实际是不对等的，因为数据接收时类型是"detail_type":"channel，）
 	} else if event.DetailType == "channel" {
 		body = map[string]interface{}{
-			"detail_type": event.DetailType,
-			"channel_id":  event.GroupID,
+			"detail_type": "group",
+			"group_id":    event.GroupID,
 			"message":     []MessageSegment{message},
 		}
 	}
@@ -244,7 +258,11 @@ func sendMessage(event *Event, msg string) {
 		SetBody(body).
 		Post(url)
 	if err != nil {
-
+		log.Println("发送错误", err)
 	}
-	log.Println(resp.String())
+	if resp.StatusCode() != 200 {
+		log.Println("发送失败", resp.String())
+	} else {
+		log.Println("发送成功", message.Data["text"])
+	}
 }
