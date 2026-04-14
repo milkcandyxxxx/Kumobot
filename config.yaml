@@ -5,3 +5,6 @@ onebots:
   ws_url : "ws://127.0.0.1:6727/kook/46609/onebot/v12"
 #  http地址
   http_url : "http://127.0.0.1:6727/kook/46609/onebot/v12"
+# 机器人设置
+bot:
+  prefix : "/"
