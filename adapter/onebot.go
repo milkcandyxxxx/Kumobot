@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // OneBotAdapter 适配器结构体
@@ -17,10 +18,11 @@ type OneBotAdapter struct {
 	httpURL string
 	conn    *websocket.Conn
 	handler []func(event *core.Event)
+	prefix  string
 }
 
 // NewOneBotAdapter 新建适配器
-func NewOneBotAdapter(wsUrl string, httpUrl string) *OneBotAdapter {
+func NewOneBotAdapter(wsUrl string, httpUrl string, prefix string) *OneBotAdapter {
 	return &OneBotAdapter{
 		wsUrl:   wsUrl,
 		httpURL: httpUrl,
@@ -71,14 +73,19 @@ func (a *OneBotAdapter) readMessage() {
 			log.Println("解析消息失败")
 			continue
 		}
+		if !strings.HasSuffix(event.AltMessage, a.prefix) {
+			return
+		}
+
 		fmt.Println(event.AltMessage)
+		event.AltMessage = event.AltMessage[1:]
 		for _, h := range a.handler {
 			h(&event)
 		}
 	}
 }
 func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
-	// 构造符合 OneBot 12 标准的消息段
+	// 构建消息段
 	payload := map[string]interface{}{
 		"user_id":     userID,
 		"detail_type": "private",
@@ -105,7 +112,31 @@ func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
 	}
 	return nil
 }
-func (a *OneBotAdapter) SendGroupMessage(groupID string, message string) error {
+func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
+	fmt.Println(4)
 	// TODO: 实现 HTTP 调用
+
+	// 构建消息段
+	payload := map[string]interface{}{
+		"group_id":    groupID,
+		"detail_type": "group",
+		"message": []map[string]interface{}{
+			{
+				"type": "text",
+				"data": map[string]interface{}{"text": msg},
+			},
+		},
+	}
+
+	// 序列化
+	body, _ := json.Marshal(payload)
+
+	// 发送 POST 请求
+	resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	fmt.Println(5)
 	return nil
 }
