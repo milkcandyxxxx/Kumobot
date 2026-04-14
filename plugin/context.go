@@ -7,25 +7,13 @@
 package plugin
 
 import (
+	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/core"
 	"strings"
 )
 
 // TODO 目前还未直线自动配置（适配器等）
-
-// Bot bot适配器
-type Bot struct {
-	config  *core.Config    // 机器人配置
-	adapter adapter.Adapter // 适配器选择
-}
-
-// NewBot 新建bot
-func NewBot(config *core.Config) *Bot {
-	return &Bot{
-		config: config,
-	}
-}
 
 // SetAdapter 设置适配器
 func (b *Bot) SetAdapter(adapter adapter.Adapter) {
@@ -41,11 +29,16 @@ type Ctx struct {
 	bot     *Bot        // 机器人实例
 }
 
-func (b *Bot) SendPrivateMessage(userID string, msg string) error {
-	return b.adapter.SendPrivateMessage(userID, msg)
-}
 func (c *Ctx) Send(msg string) error {
-	return c.bot.SendPrivateMessage(c.event.UserID, msg)
+	fmt.Println(1)
+	if c.event.DetailType == "private" {
+		return c.bot.SendPrivateMessage(c.event.UserID, msg)
+	}
+	if c.event.DetailType == "channel" {
+		fmt.Println(2)
+		return c.bot.SendGroupMessage(c.event.GroupID, msg)
+	}
+	return nil
 }
 
 // ExtractPlainText 用于获取第一个参数
