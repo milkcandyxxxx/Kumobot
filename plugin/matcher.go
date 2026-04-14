@@ -6,8 +6,6 @@
 
 package plugin
 
-import "sync"
-
 // Handler 处理函数（回调函数定义）
 type Handler func(ctx *Ctx)
 
@@ -20,14 +18,9 @@ type Matcher struct {
 	Handler   Handler // 回调函数
 }
 
-var (
-	matchers = []Matcher{} // 存储所有的匹配器注册
-	mu       sync.RWMutex  // 加锁（目前是冷加载插件，后续热加载等需要注意）
-)
-
-// 添加注册
+// addMatcher 添加匹配器
 func addMatcher(m Matcher) {
 	mu.Lock()
 	defer mu.Unlock()
-	matchers = append(matchers, m)
+	runningPlugin.Matcher = append(runningPlugin.Matcher, m)
 }
