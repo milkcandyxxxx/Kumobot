@@ -16,3 +16,13 @@ func OnCommand(cmd string, h Handler) {
 		Handler:   h,
 	})
 }
+
+func OnPlugin(info ...string) {
+	thisPlugin := &Plugin{
+		Name:    info[0],
+		Version: info[1],
+		Author:  info[2],
+		Help:    info[3],
+	}
+	addPlugin(thisPlugin)
+}
