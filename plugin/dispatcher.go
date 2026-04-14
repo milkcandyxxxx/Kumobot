@@ -23,23 +23,23 @@ func (b *Bot) Dispatch(event *core.Event) {
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	for _, m := range matchers {
-		matched := false
-		switch m.Type {
-		case "startswith":
-			matched = strings.HasPrefix(ctx.message, m.Pattern)
-		case "cmd":
-			matched = isCmd(ctx.message, m.Pattern)
-
-		}
-
-		if matched {
-			m.Handler(ctx)
+	for _, p := range plugins {
+		for _, m := range p.Matcher {
+			matched := false
+			switch m.Type {
+			case "startswith":
+				matched = strings.HasPrefix(ctx.message, m.Pattern)
+			case "cmd":
+				matched = isCmd(ctx.message, m.Pattern)
+			}
+			if matched {
+				m.Handler(ctx)
+			}
 		}
 	}
 }
 
-// cmd 类型的匹配规则
+// isCmd 类型的匹配规则
 func isCmd(msg string, cmd string) bool {
 	return strings.HasPrefix(msg, cmd)
 }
