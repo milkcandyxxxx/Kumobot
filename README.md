@@ -2,4 +2,4 @@
 
 ## 思维导图
 
-![./img.png](img.png)
+![img.png](img.png)
