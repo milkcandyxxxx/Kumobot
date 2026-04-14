@@ -22,6 +22,7 @@ func main() {
 	adp := adapter.NewOneBotAdapter(
 		core.GlobalConfig.Onebots.WsURL,
 		core.GlobalConfig.Onebots.HttpURL,
+		core.GlobalConfig.Bot.Prefix,
 	)
 	// bot绑定适配器
 	b.SetAdapter(adp)
