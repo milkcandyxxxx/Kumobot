@@ -7,7 +7,6 @@
 package plugin
 
 import (
-	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/core"
 	"strings"
@@ -30,12 +29,10 @@ type Ctx struct {
 }
 
 func (c *Ctx) Send(msg string) error {
-	fmt.Println(1)
 	if c.event.DetailType == "private" {
 		return c.bot.SendPrivateMessage(c.event.UserID, msg)
 	}
 	if c.event.DetailType == "channel" {
-		fmt.Println(2)
 		return c.bot.SendGroupMessage(c.event.GroupID, msg)
 	}
 	return nil

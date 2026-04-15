@@ -7,7 +7,6 @@
 package plugin
 
 import (
-	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/core"
 )
@@ -22,7 +21,6 @@ func (b *Bot) SendPrivateMessage(userID string, msg string) error {
 	return b.adapter.SendPrivateMessage(userID, msg)
 }
 func (b *Bot) SendGroupMessage(groupID string, msg string) error {
-	fmt.Println(3)
 	return b.adapter.SendGroupMessage(groupID, msg)
 }
 

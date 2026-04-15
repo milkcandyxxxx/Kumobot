@@ -113,7 +113,6 @@ func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
 	return nil
 }
 func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
-	fmt.Println(4)
 	// TODO: 实现 HTTP 调用
 
 	// 构建消息段
@@ -137,6 +136,5 @@ func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	fmt.Println(5)
 	return nil
 }
