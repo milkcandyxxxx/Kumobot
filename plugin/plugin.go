@@ -1,7 +1,7 @@
 /**
  * @author milkcandy
- * @date 2026/4/14
- * @description TODO
+ * @date 2026/4/13
+ * @description 插件管理
  */
 
 package plugin
@@ -40,4 +40,14 @@ func addPlugin(p *Plugin) {
 }
 func GetPluginName() string {
 	return runningPlugin.Name
+}
+
+func OnPlugin(info ...string) {
+	thisPlugin := &Plugin{
+		Name:    info[0],
+		Version: info[1],
+		Author:  info[2],
+		Help:    info[3],
+	}
+	addPlugin(thisPlugin)
 }
