@@ -27,6 +27,7 @@ func NewOneBotAdapter(wsUrl string, httpUrl string, prefix string) *OneBotAdapte
 		wsUrl:   wsUrl,
 		httpURL: httpUrl,
 		handler: []func(event *core.Event){},
+		prefix:  prefix,
 	}
 }
 
@@ -73,12 +74,13 @@ func (a *OneBotAdapter) readMessage() {
 			log.Println("解析消息失败")
 			continue
 		}
-		if !strings.HasSuffix(event.AltMessage, a.prefix) {
-			return
+
+		if !strings.HasPrefix(event.AltMessage, a.prefix) {
+			continue
 		}
 
-		fmt.Println(event.AltMessage)
 		event.AltMessage = event.AltMessage[1:]
+
 		for _, h := range a.handler {
 			h(&event)
 		}
