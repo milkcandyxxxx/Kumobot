@@ -11,13 +11,15 @@ import (
 	"sync"
 )
 
-// Plugin 插件总结构体储存信息
+// Plugin 插件模块
 type Plugin struct {
-	Name    string
-	Version string
-	Author  string
-	Help    string
-	Matcher []Matcher
+	Name      string
+	Version   string
+	Author    string
+	Help      string
+	Priority  int  // 优先级，1-10越小越优先
+	Exclusive bool // 是否独家（不允许其他插件再次触发）
+	Matcher   []Matcher
 }
 
 // // Info 插件基础信息结构体
@@ -40,14 +42,4 @@ func addPlugin(p *Plugin) {
 }
 func GetPluginName() string {
 	return runningPlugin.Name
-}
-
-func OnPlugin(info ...string) {
-	thisPlugin := &Plugin{
-		Name:    info[0],
-		Version: info[1],
-		Author:  info[2],
-		Help:    info[3],
-	}
-	addPlugin(thisPlugin)
 }
