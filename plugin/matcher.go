@@ -11,11 +11,12 @@ type Handler func(ctx *Ctx)
 
 // Matcher 匹配器，用于指令的匹配
 type Matcher struct {
-	Type      string  // 匹配类型 命令，前缀等等
-	Pattern   string  // 匹配所需的关键词 如 / ! 等
-	Priority  int     // 优先级，1-10越小越优先
-	Exclusive bool    // 是否独家（不允许其他插件再次触发）
-	Handler   Handler // 回调函数
+	Type    string // 匹配类型 命令，前缀等等
+	Pattern string // 匹配所需的关键词 如 / ! 等
+	// Priority  int     // 优先级，1-10越小越优先
+	// Exclusive bool    // 是否独家（不允许其他插件再次触发）
+	// 优化为插件优先级（先保留后续再看）
+	Handler Handler // 回调函数
 }
 
 // addMatcher 添加匹配器

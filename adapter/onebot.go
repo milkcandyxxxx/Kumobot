@@ -17,7 +17,7 @@ type OneBotAdapter struct {
 	wsUrl   string
 	httpURL string
 	conn    *websocket.Conn
-	handler []func(event *core.Event)
+	module  []func(event *core.Event)
 	prefix  string
 }
 
@@ -26,7 +26,7 @@ func NewOneBotAdapter(wsUrl string, httpUrl string, prefix string) *OneBotAdapte
 	return &OneBotAdapter{
 		wsUrl:   wsUrl,
 		httpURL: httpUrl,
-		handler: []func(event *core.Event){},
+		module:  []func(event *core.Event){},
 		prefix:  prefix,
 	}
 }
@@ -74,6 +74,7 @@ func (a *OneBotAdapter) readMessage() {
 			log.Println("解析消息失败")
 			continue
 		}
+		fmt.Printf("%+v\n", event)
 
 		if !strings.HasPrefix(event.AltMessage, a.prefix) {
 			continue
@@ -81,7 +82,7 @@ func (a *OneBotAdapter) readMessage() {
 
 		event.AltMessage = event.AltMessage[1:]
 
-		for _, h := range a.handler {
+		for _, h := range a.module {
 			h(&event)
 		}
 	}

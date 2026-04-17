@@ -14,10 +14,10 @@ type Adapter interface {
 	// SendGroupMessage 发送群组消息
 	SendGroupMessage(groupID string, msg string) error
 	// OnEvent 注册事件回调
-	OnEvent(handler func(event *core.Event))
+	OnEvent(module func(event *core.Event))
 }
 
 // OnEvent 注册事件监听函数
-func (a *OneBotAdapter) OnEvent(handler func(event *core.Event)) {
-	a.handler = append(a.handler, handler)
+func (a *OneBotAdapter) OnEvent(module func(event *core.Event)) {
+	a.module = append(a.module, module)
 }

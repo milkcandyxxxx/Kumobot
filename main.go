@@ -5,7 +5,6 @@ import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/core"
 	"github.com/milkcandyxxxx/Kumobot/plugin"
-
 	_ "github.com/milkcandyxxxx/Kumobot/plugins"
 	"log"
 )
