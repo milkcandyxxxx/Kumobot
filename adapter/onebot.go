@@ -80,7 +80,7 @@ func (a *OneBotAdapter) readMessage() {
 			continue
 		}
 
-		event.AltMessage = event.AltMessage[1:]
+		event.AltMessage = event.AltMessage[len(a.prefix):]
 
 		for _, h := range a.module {
 			h(&event)
