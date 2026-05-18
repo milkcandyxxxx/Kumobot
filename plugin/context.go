@@ -15,9 +15,7 @@ import (
 
 // SetAdapter 设置适配器
 func (b *Bot) SetAdapter(adapter adapter.Adapter) {
-
 	b.adapter = adapter
-
 }
 
 // Ctx 消息上下文

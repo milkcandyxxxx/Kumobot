@@ -7,6 +7,7 @@
 package plugin
 
 import (
+	"github.com/milkcandyxxxx/Kumobot/core"
 	"strconv"
 	"strings"
 )
@@ -20,6 +21,16 @@ func (c *Ctx) Send(msg string) error {
 	}
 	return nil
 }
+
+// GetSelfInfo 获取机器人自身信息
+func (c *Ctx) GetSelfInfo() (core.SelfInfRes, error) {
+	return c.bot.GetSelfInfo()
+}
+
+// GetUserInfo 获取用户信息
+// func (c *Ctx) GetUserInfo(id string) (core.UserInfo, error) {
+// 	return c.bot.GetUserInfo()
+// }
 
 // ExtractPlainText 用于获取第一个参数
 func (c *Ctx) ExtractPlainText() string {
@@ -37,6 +48,15 @@ func OnCommand(cmd string, h Handler) {
 	})
 }
 
+// OnRegex 正则匹配
+func OnRegex(regex string, h Handler) {
+	addMatcher(Matcher{
+		Type:    "regex",
+		Pattern: regex,
+		Handler: h,
+	})
+}
+
 // OnPlugin 注册插件
 func OnPlugin(info ...string) {
 	thisPlugin := &Plugin{
@@ -46,7 +66,6 @@ func OnPlugin(info ...string) {
 		Help:      "无",
 		Priority:  0,
 		Exclusive: false,
-		Matcher:   nil,
 	}
 	thisPlugin.Name = info[0]
 	thisPlugin.Help = info[1]
@@ -54,6 +73,5 @@ func OnPlugin(info ...string) {
 	exclusive, _ := strconv.ParseBool(info[3])
 	thisPlugin.Priority = priority
 	thisPlugin.Exclusive = exclusive
-
 	addPlugin(thisPlugin)
 }

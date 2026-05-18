@@ -9,6 +9,7 @@ package plugin
 import (
 	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/core"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -37,10 +38,18 @@ func (b *Bot) Dispatch(event *core.Event) {
 			matched := false
 			// 依据类型判断是否匹配
 			switch m.Type {
+			// 以什么什么开头
 			case "startswith":
-				matched = strings.HasPrefix(ctx.message, m.Pattern)
+				matched = strings.HasPrefix(m.Pattern, ctx.message)
+			// 指令
 			case "cmd":
-				matched = isCmd(ctx.message, m.Pattern)
+				matched = isCmd(m.Pattern, ctx.message)
+			// 正则
+			case "regex":
+				matched = isRegex(m.Pattern, ctx.message)
+			// 以什么什么结尾
+			case "endswith":
+				matched = strings.HasSuffix(m.Pattern, ctx.message)
 			}
 			// 匹配则执行
 			if matched {
@@ -55,7 +64,14 @@ func (b *Bot) Dispatch(event *core.Event) {
 }
 
 // isCmd 类型的匹配规则
-func isCmd(msg string, cmd string) bool {
+func isCmd(cmd string, msg string) bool {
 
 	return strings.HasPrefix(msg, cmd)
+}
+func isRegex(regex string, msg string) bool {
+	match, err := regexp.Compile(regex)
+	if err != nil {
+		return false
+	}
+	return match.MatchString(msg)
 }

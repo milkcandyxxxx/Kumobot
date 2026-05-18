@@ -23,7 +23,32 @@ type BotConfig struct {
 	Admins []string `mapstructure:"admins"` // 管理员列表
 }
 
-// 全局配置
+// SelfInfRes 机器人自身信息结构体
+type SelfInfRes struct {
+	Status  string `json:"status"`
+	Retcode int    `json:"retcode"`
+	Data    struct {
+		UserId          string `json:"user_id"`
+		UserName        string `json:"user_name"`
+		Platform        string `json:"platform"`
+		UserDisplayname string `json:"user_displayname"`
+	} `json:"data"`
+	Message string `json:"message"`
+}
+type UserInfo struct {
+	Status  string `json:"status"`
+	Retcode int    `json:"retcode"`
+	Data    struct {
+		UserId   string `json:"user_id"`
+		Nickname string `json:"nickname"`
+		Sex      string `json:"sex"`
+		Age      int    `json:"age"`
+		Area     string `json:"area"`
+	} `json:"data"`
+	Message string `json:"message"`
+}
+
+// GlobalConfig 全局配置
 var GlobalConfig Config
 
 // LoadConfig 读取配置文件并写入全局配置

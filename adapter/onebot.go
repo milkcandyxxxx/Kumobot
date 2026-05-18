@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/milkcandyxxxx/Kumobot/core"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -21,7 +22,7 @@ type OneBotAdapter struct {
 	prefix  string
 }
 
-// NewOneBotAdapter 新建适配器
+// NewOneBotAdapter  适配器结构体
 func NewOneBotAdapter(wsUrl string, httpUrl string, prefix string) *OneBotAdapter {
 	return &OneBotAdapter{
 		wsUrl:   wsUrl,
@@ -48,7 +49,6 @@ func (a *OneBotAdapter) Connect() error {
 		return err
 	}
 	a.conn = conn
-	go a.readMessage()
 	return nil
 }
 
@@ -61,9 +61,10 @@ func (a *OneBotAdapter) Disconnect() error {
 	return nil
 }
 
-// readMessage 读取信息
-func (a *OneBotAdapter) readMessage() {
+// ReadMessage 读取信息
+func (a *OneBotAdapter) ReadMessage() (core.Event, error) {
 	for {
+
 		_, message, err := a.conn.ReadMessage()
 		if err != nil {
 			log.Println("获取消息失败")
@@ -72,21 +73,14 @@ func (a *OneBotAdapter) readMessage() {
 		err = json.Unmarshal(message, &event)
 		if err != nil {
 			log.Println("解析消息失败")
-			continue
+			return core.Event{}, err
 		}
 		fmt.Printf("%+v\n", event)
-
-		if !strings.HasPrefix(event.AltMessage, a.prefix) {
-			continue
-		}
-
-		event.AltMessage = event.AltMessage[len(a.prefix):]
-
-		for _, h := range a.module {
-			h(&event)
-		}
+		return event, nil
 	}
 }
+
+// SendPrivateMessage 发送私聊消息
 func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
 	// 构建消息段
 	payload := map[string]interface{}{
@@ -115,9 +109,10 @@ func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
 	}
 	return nil
 }
+
+// SendGroupMessage 发送群聊消息
 func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 	// TODO: 实现 HTTP 调用
-
 	// 构建消息段
 	payload := map[string]interface{}{
 		"group_id":    groupID,
@@ -129,10 +124,8 @@ func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 			},
 		},
 	}
-
 	// 序列化
 	body, _ := json.Marshal(payload)
-
 	// 发送 POST 请求
 	resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
 	if err != nil {
@@ -141,3 +134,39 @@ func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 	defer resp.Body.Close()
 	return nil
 }
+
+// GetSelfInfo 获取机器人自身信息
+func (a *OneBotAdapter) GetSelfInfo() (core.SelfInfRes, error) {
+	res, err := http.Post(a.httpURL+"/get_self_info", "application/json", nil)
+	if err != nil {
+		return core.SelfInfRes{}, err
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	var selfinfo core.SelfInfRes
+	err = json.Unmarshal(body, &selfinfo)
+	return selfinfo, nil
+}
+
+// GetUserInfo 获取用户信息
+func (a *OneBotAdapter) GetUserInfo(userID string) (core.UserInfo, error) {
+	id := strings.NewReader(userID)
+	res, err := http.Post(a.httpURL+"/get_user_info", "application/json", id)
+	if err != nil {
+		return core.UserInfo{}, err
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	var selfinfo core.SelfInfRes
+	err = json.Unmarshal(body, &selfinfo)
+	return core.UserInfo{}, nil
+}
+
+// func (a *OneBotAdapter) GetInfo() *OneBotAdapter {
+// 	return a
+// }
+// func (a *OneBotAdapter) SetInfo(info *OneBotAdapter) {
+// 	a.WsUrl = info.WsUrl
+// 	a.Conn = info.Conn
+// 	a.HttpURL = info.HttpURL
+// }

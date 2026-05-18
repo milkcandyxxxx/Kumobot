@@ -23,19 +23,16 @@ func main() {
 		core.GlobalConfig.Onebots.HttpURL,
 		core.GlobalConfig.Bot.Prefix,
 	)
-	// bot绑定适配器
 	b.SetAdapter(adp)
 	// 注册插件
-	adp.OnEvent(func(event *core.Event) {
+	b.OnEvent(func(event *core.Event) {
 		if event.Type != "message" {
 			return
 		}
 		b.Dispatch(event)
 	})
 
-	if err := adp.Connect(); err != nil {
-		log.Fatal("连接失败:", err)
-	}
+	b.Runbot()
 	log.Println("Kumobot 已启动")
 
 	select {}
