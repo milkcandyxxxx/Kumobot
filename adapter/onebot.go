@@ -75,7 +75,6 @@ func (a *OneBotAdapter) ReadMessage() (core.Event, error) {
 			log.Println("解析消息失败")
 			return core.Event{}, err
 		}
-		fmt.Printf("%+v\n", event)
 		return event, nil
 	}
 }

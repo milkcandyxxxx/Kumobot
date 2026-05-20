@@ -24,9 +24,13 @@ func main() {
 		core.GlobalConfig.Bot.Prefix,
 	)
 	b.SetAdapter(adp)
-	// 注册插件
-	m := b.NewModule()
-	m.add
+	// 注册插件模块
+	b.OnEvent(func(event *core.Event) {
+		if event.Type != "message" {
+			return
+		}
+		b.Dispatch(event)
+	})
 	b.Runbot()
 	log.Println("Kumobot 已启动")
 

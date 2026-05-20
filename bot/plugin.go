@@ -39,7 +39,7 @@ func addPlugin(p *Plugin) {
 	defer mu.Unlock()
 	plugins = append(plugins, p)
 	runningPlugin = p
-	log.Println("\n加载插件:", p.Name, "\n版本:", p.Version, "\n作者:", p.Author)
+	log.Println("\n加载插件:", p.Name, "\n版本:", p.Version, "\n作者:", p.Author, "\n帮助:", p.Help, "\n优先级:", p.Priority, "\n独家:", p.Exclusive)
 }
 func GetPluginName() string {
 	return runningPlugin.Name

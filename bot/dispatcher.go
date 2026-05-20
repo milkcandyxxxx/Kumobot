@@ -7,7 +7,6 @@
 package bot
 
 import (
-	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/core"
 	"regexp"
 	"sort"
@@ -25,9 +24,6 @@ func (b *Bot) Dispatch(event *core.Event) {
 	sort.Slice(plugins, func(i, j int) bool {
 		return plugins[i].Priority > plugins[j].Priority
 	})
-	for i, p := range plugins {
-		fmt.Printf("%d,%v", i, p)
-	}
 	for _, p := range plugins {
 		for _, m := range p.Matcher {
 			// 默认为匹配

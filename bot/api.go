@@ -63,9 +63,11 @@ func OnPlugin(info ...string) {
 		Exclusive: false,
 	}
 	thisPlugin.Name = info[0]
-	thisPlugin.Help = info[1]
-	priority, _ := strconv.Atoi(info[2])
-	exclusive, _ := strconv.ParseBool(info[3])
+	thisPlugin.Help = info[3]
+	thisPlugin.Version = info[1]
+	thisPlugin.Author = info[2]
+	priority, _ := strconv.Atoi(info[4])
+	exclusive, _ := strconv.ParseBool(info[5])
 	thisPlugin.Priority = priority
 	thisPlugin.Exclusive = exclusive
 	addPlugin(thisPlugin)
