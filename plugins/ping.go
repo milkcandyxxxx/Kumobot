@@ -7,16 +7,15 @@
 package plugins
 
 import (
-	"fmt"
-	"github.com/milkcandyxxxx/Kumobot/plugin"
+	"github.com/milkcandyxxxx/Kumobot/bot"
+	"log"
 )
 
 func init() {
-	plugin.OnPlugin("ping", "", "1", "false")
+	bot.OnPlugin("ping", "", "1", "false")
+	log.Println("注册成功")
 	// 指定词语回复
-	plugin.OnRegex("124\\d{4}111", func(ctx *plugin.Ctx) {
-		ctx.Send("pong")
-		res, _ := ctx.GetSelfInfo()
-		fmt.Println(res)
+	bot.OnCommand("1", func(b *bot.Bot) {
+		b.Send("pong")
 	})
 }

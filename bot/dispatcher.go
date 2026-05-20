@@ -4,7 +4,7 @@
  * @description 调度器，判断所有匹配
  */
 
-package plugin
+package bot
 
 import (
 	"fmt"
@@ -19,11 +19,7 @@ func (b *Bot) Dispatch(event *core.Event) {
 	if event.Type != "message" {
 		return
 	}
-	ctx := &Ctx{
-		event:   event,
-		bot:     b,
-		message: event.GetMessageText(),
-	}
+	b.event = event
 	mu.Lock()
 	defer mu.Unlock()
 	sort.Slice(plugins, func(i, j int) bool {
@@ -40,20 +36,20 @@ func (b *Bot) Dispatch(event *core.Event) {
 			switch m.Type {
 			// 以什么什么开头
 			case "startswith":
-				matched = strings.HasPrefix(m.Pattern, ctx.message)
+				matched = strings.HasPrefix(m.Pattern, b.event.GetMessageText())
 			// 指令
 			case "cmd":
-				matched = isCmd(m.Pattern, ctx.message)
+				matched = isCmd(m.Pattern, b.event.GetMessageText())
 			// 正则
 			case "regex":
-				matched = isRegex(m.Pattern, ctx.message)
+				matched = isRegex(m.Pattern, b.event.GetMessageText())
 			// 以什么什么结尾
 			case "endswith":
-				matched = strings.HasSuffix(m.Pattern, ctx.message)
+				matched = strings.HasSuffix(m.Pattern, b.event.GetMessageText())
 			}
 			// 匹配则执行
 			if matched {
-				m.Handler(ctx)
+				m.Handler(b)
 			}
 			// 判断是否独家（向下传递）
 			if p.Exclusive {

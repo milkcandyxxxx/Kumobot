@@ -161,12 +161,3 @@ func (a *OneBotAdapter) GetUserInfo(userID string) (core.UserInfo, error) {
 	err = json.Unmarshal(body, &selfinfo)
 	return core.UserInfo{}, nil
 }
-
-// func (a *OneBotAdapter) GetInfo() *OneBotAdapter {
-// 	return a
-// }
-// func (a *OneBotAdapter) SetInfo(info *OneBotAdapter) {
-// 	a.WsUrl = info.WsUrl
-// 	a.Conn = info.Conn
-// 	a.HttpURL = info.HttpURL
-// }

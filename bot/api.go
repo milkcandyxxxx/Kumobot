@@ -1,30 +1,25 @@
 /**
  * @author milkcandy
  * @date 2026/4/15
+ * 对于bot用法的二次包装
  * @description TODO
  */
 
-package plugin
+package bot
 
 import (
-	"github.com/milkcandyxxxx/Kumobot/core"
 	"strconv"
 	"strings"
 )
 
-func (c *Ctx) Send(msg string) error {
-	if c.event.DetailType == "private" {
-		return c.bot.SendPrivateMessage(c.event.UserID, msg)
+func (b *Bot) Send(msg string) error {
+	if b.event.DetailType == "private" {
+		return b.SendPrivateMessage(b.event.UserID, msg)
 	}
-	if c.event.DetailType == "channel" {
-		return c.bot.SendGroupMessage(c.event.GroupID, msg)
+	if b.event.DetailType == "channel" {
+		return b.SendGroupMessage(b.event.GroupID, msg)
 	}
 	return nil
-}
-
-// GetSelfInfo 获取机器人自身信息
-func (c *Ctx) GetSelfInfo() (core.SelfInfRes, error) {
-	return c.bot.GetSelfInfo()
 }
 
 // GetUserInfo 获取用户信息
@@ -33,8 +28,8 @@ func (c *Ctx) GetSelfInfo() (core.SelfInfRes, error) {
 // }
 
 // ExtractPlainText 用于获取第一个参数
-func (c *Ctx) ExtractPlainText() string {
-	return strings.SplitN(c.message, " ", 2)[1]
+func (b *Bot) ExtractPlainText() string {
+	return strings.SplitN(b.event.GetMessageText(), " ", 2)[1]
 }
 
 // OnCommand 单匹配

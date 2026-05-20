@@ -4,7 +4,7 @@
  * @description TODO
  */
 
-package plugin
+package bot
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
@@ -16,8 +16,9 @@ import (
 type Bot struct {
 	config  *core.Config    // 机器人配置
 	adapter adapter.Adapter // 适配器选择
-	Module  []func(event *core.Event)
 	Prefix  string
+	Module  []func(event *core.Event)
+	event   *core.Event
 }
 
 func (b *Bot) SendPrivateMessage(userID string, msg string) error {
@@ -51,18 +52,25 @@ func (b *Bot) OnEvent(module func(event *core.Event)) {
 
 func (b *Bot) Execute() {
 	b.adapter.Connect()
-	event, _ := b.adapter.ReadMessage()
-	if event.Type == "message" {
-		if !strings.HasPrefix(event.AltMessage, b.Prefix) {
-			return
-		}
-		event.AltMessage = event.AltMessage[len(b.Prefix):]
+	for {
+		event, _ := b.adapter.ReadMessage()
+		if event.Type == "message" {
+			if !strings.HasPrefix(event.AltMessage, b.Prefix) {
+				return
+			}
+			event.AltMessage = event.AltMessage[len(b.Prefix):]
 
-		for _, h := range b.Module {
-			h(&event)
+			for _, h := range b.Module {
+				h(&event)
+			}
 		}
 	}
 }
 func (b *Bot) Runbot() {
 	go b.Execute()
+}
+
+// SetAdapter 设置适配器
+func (b *Bot) SetAdapter(adapter adapter.Adapter) {
+	b.adapter = adapter
 }

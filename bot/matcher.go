@@ -4,10 +4,10 @@
  * @description TODO
  */
 
-package plugin
+package bot
 
 // Handler 处理函数（回调函数定义）
-type Handler func(ctx *Ctx)
+type Handler func(b *Bot)
 
 // Matcher 匹配器，用于指令的匹配
 type Matcher struct {

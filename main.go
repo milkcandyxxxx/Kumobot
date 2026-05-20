@@ -3,8 +3,8 @@ package main
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
+	"github.com/milkcandyxxxx/Kumobot/bot"
 	"github.com/milkcandyxxxx/Kumobot/core"
-	"github.com/milkcandyxxxx/Kumobot/plugin"
 	_ "github.com/milkcandyxxxx/Kumobot/plugins"
 	"log"
 )
@@ -16,7 +16,7 @@ func main() {
 		log.Fatal("加载配置失败:", err)
 	}
 	// 新建bot实例
-	b := plugin.NewBot(&core.GlobalConfig)
+	b := bot.NewBot(&core.GlobalConfig)
 	// 设置适配器
 	adp := adapter.NewOneBotAdapter(
 		core.GlobalConfig.Onebots.WsURL,
@@ -25,13 +25,8 @@ func main() {
 	)
 	b.SetAdapter(adp)
 	// 注册插件
-	b.OnEvent(func(event *core.Event) {
-		if event.Type != "message" {
-			return
-		}
-		b.Dispatch(event)
-	})
-
+	m := b.NewModule()
+	m.add
 	b.Runbot()
 	log.Println("Kumobot 已启动")
 

@@ -18,5 +18,5 @@ type Adapter interface {
 	// SendGroupMessage 发送群组消息
 	SendGroupMessage(groupID string, msg string) error
 	GetSelfInfo() (core.SelfInfRes, error)
-	// GetUserInfo() (core.UserInfo, error)
+	GetUserInfo(userID string) (core.UserInfo, error)
 }

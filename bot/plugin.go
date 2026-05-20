@@ -4,7 +4,7 @@
  * @description 插件管理
  */
 
-package plugin
+package bot
 
 import (
 	"log"
