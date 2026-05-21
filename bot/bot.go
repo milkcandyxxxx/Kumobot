@@ -66,3 +66,7 @@ func (b *Bot) Runbot() {
 func (b *Bot) SetAdapter(adapter adapter.Adapter) {
 	b.adapter = adapter
 }
+
+func (b *Bot) DeleteMessage(messageId string) error {
+	return b.adapter.DeleteMessage(messageId)
+}

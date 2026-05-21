@@ -1,7 +1,6 @@
 package adapter
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -79,6 +78,7 @@ func (a *OneBotAdapter) ReadMessage() (core.Response, error) {
 		if _, exists := check["type"]; exists {
 			var event core.Event
 			err = json.Unmarshal(message, &event)
+			// fmt.Println(event)
 			if err != nil {
 				log.Println("解析消息失败")
 				return nil, err
@@ -102,35 +102,41 @@ func (a *OneBotAdapter) ReadMessage() (core.Response, error) {
 func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
 	// 构建消息段
 	payload := map[string]interface{}{
-		"user_id":     userID,
-		"detail_type": "private",
-		"message": []map[string]interface{}{
-			{
-				"type": "text",
-				"data": map[string]interface{}{"text": msg},
+		"action": "send_message",
+		"params": map[string]interface{}{
+			"user_id":     userID,
+			"detail_type": "private",
+			"message": []map[string]interface{}{
+				{
+					"type": "text",
+					"data": map[string]interface{}{"text": msg},
+				},
 			},
 		},
 	}
 
 	// 序列化
 	body, _ := json.Marshal(payload)
-
-	// 发送 POST 请求
-	resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
+	err := a.conn.WriteMessage(websocket.TextMessage, body)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("onebot status error: %d", resp.StatusCode)
-	}
 	return nil
+	// // 发送 POST 请求 TODO 暂留
+	// resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
+	// if err != nil {
+	// 	return err
+	// }
+	// defer resp.Body.Close()
+	//
+	// if resp.StatusCode != http.StatusOK {
+	// 	return fmt.Errorf("onebot status error: %d", resp.StatusCode)
+	// }
+	// return nil
 }
 
 // SendGroupMessage 发送群聊消息
 func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
-	// TODO: 实现 HTTP 调用
 	// 构建消息段
 	payload := map[string]interface{}{
 		"action": "send_message",
@@ -147,7 +153,7 @@ func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 	}
 	// 序列化
 	body, _ := json.Marshal(payload)
-	// // 发送 POST 请求
+	// // 发送 POST 请求 TODO 暂留
 	// resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
 	// if err != nil {
 	// 	return err
@@ -186,4 +192,20 @@ func (a *OneBotAdapter) GetUserInfo(userID string) (core.UserInfo, error) {
 	var selfinfo core.SelfInfRes
 	err = json.Unmarshal(body, &selfinfo)
 	return core.UserInfo{}, nil
+}
+
+func (a *OneBotAdapter) DeleteMessage(messageId string) error {
+	payload := map[string]interface{}{
+		"action": "delete_message",
+		"params": map[string]interface{}{
+			"message_id": messageId,
+		},
+	}
+	// 序列化
+	body, _ := json.Marshal(payload)
+	err := a.conn.WriteMessage(websocket.TextMessage, body)
+	if err != nil {
+		return err
+	}
+	return nil
 }
