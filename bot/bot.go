@@ -18,19 +18,7 @@ type Bot struct {
 	adapter adapter.Adapter // 适配器选择
 	Prefix  string
 	Module  []func(event *core.Event)
-	event   *core.Event
-}
-
-func (b *Bot) SendPrivateMessage(userID string, msg string) error {
-	return b.adapter.SendPrivateMessage(userID, msg)
-}
-func (b *Bot) SendGroupMessage(groupID string, msg string) error {
-	return b.adapter.SendGroupMessage(groupID, msg)
-}
-
-// GetSelfInfo 获取自身数据
-func (b *Bot) GetSelfInfo() (core.SelfInfRes, error) {
-	return b.adapter.GetSelfInfo()
+	Event   *core.Event
 }
 
 // GetUserInfo
@@ -53,7 +41,11 @@ func (b *Bot) OnEvent(module func(event *core.Event)) {
 func (b *Bot) Execute() {
 	b.adapter.Connect()
 	for {
-		event, _ := b.adapter.ReadMessage()
+		msg, _ := b.adapter.ReadMessage()
+		event, ok := msg.(*core.Event)
+		if !ok {
+			continue // 不是事件，跳过
+		}
 		if event.Type == "message" {
 			if !strings.HasPrefix(event.AltMessage, b.Prefix) {
 				return
@@ -61,7 +53,7 @@ func (b *Bot) Execute() {
 			event.AltMessage = event.AltMessage[len(b.Prefix):]
 
 			for _, h := range b.Module {
-				h(&event)
+				h(event)
 			}
 		}
 	}

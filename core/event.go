@@ -84,3 +84,30 @@ func (e *Event) GetMessageText() string {
 func (e *Event) GetPlatform() string {
 	return e.Self.Platform
 }
+
+// Response 响应体的总接口
+type Response interface {
+	kind() string
+}
+
+// 实现类型接口
+func (e *Event) kind() string {
+	return "event"
+}
+
+// ActionResponse 动作响应
+type ActionResponse struct {
+	Status  string `json:"status"`
+	Retcode int    `json:"retcode"`
+	Data    struct {
+		MessageId string  `json:"message_id"`
+		Time      float64 `json:"time"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Echo    string `json:"echo"`
+}
+
+// 实现类型接口
+func (e *ActionResponse) kind() string {
+	return "action"
+}

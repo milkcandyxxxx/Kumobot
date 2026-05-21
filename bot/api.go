@@ -1,23 +1,24 @@
 /**
  * @author milkcandy
  * @date 2026/4/15
- * 对于bot用法的二次包装
+ * 对于插件写法的二次包装
  * @description TODO
  */
 
 package bot
 
 import (
+	"github.com/milkcandyxxxx/Kumobot/core"
 	"strconv"
 	"strings"
 )
 
 func (b *Bot) Send(msg string) error {
-	if b.event.DetailType == "private" {
-		return b.SendPrivateMessage(b.event.UserID, msg)
+	if b.Event.DetailType == "private" {
+		return b.SendPrivateMessage(b.Event.UserID, msg)
 	}
-	if b.event.DetailType == "channel" {
-		return b.SendGroupMessage(b.event.GroupID, msg)
+	if b.Event.DetailType == "channel" {
+		return b.SendGroupMessage(b.Event.GroupID, msg)
 	}
 	return nil
 }
@@ -29,7 +30,7 @@ func (b *Bot) Send(msg string) error {
 
 // ExtractPlainText 用于获取第一个参数
 func (b *Bot) ExtractPlainText() string {
-	return strings.SplitN(b.event.GetMessageText(), " ", 2)[1]
+	return strings.SplitN(b.Event.GetMessageText(), " ", 2)[1]
 }
 
 // OnCommand 单匹配
@@ -71,4 +72,24 @@ func OnPlugin(info ...string) {
 	thisPlugin.Priority = priority
 	thisPlugin.Exclusive = exclusive
 	addPlugin(thisPlugin)
+}
+
+// SendPrivateMessage 发送私聊信息
+func (b *Bot) SendPrivateMessage(userID string, msg string) error {
+	return b.adapter.SendPrivateMessage(userID, msg)
+}
+
+// SendGroupMessage 发送群里信息
+func (b *Bot) SendGroupMessage(groupID string, msg string) error {
+	return b.adapter.SendGroupMessage(groupID, msg)
+}
+
+// GetUserInfo 获取用户信息
+func (b *Bot) GetUserInfo(userID string) (core.UserInfo, error) {
+	return b.adapter.GetUserInfo(userID)
+}
+
+// GetSelfInfo 获取自身数据
+func (b *Bot) GetSelfInfo() (core.SelfInfRes, error) {
+	return b.adapter.GetSelfInfo()
 }

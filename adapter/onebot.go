@@ -62,20 +62,39 @@ func (a *OneBotAdapter) Disconnect() error {
 }
 
 // ReadMessage 读取信息
-func (a *OneBotAdapter) ReadMessage() (core.Event, error) {
+func (a *OneBotAdapter) ReadMessage() (core.Response, error) {
 	for {
 
 		_, message, err := a.conn.ReadMessage()
 		if err != nil {
 			log.Println("获取消息失败")
 		}
-		var event core.Event
-		err = json.Unmarshal(message, &event)
+		// 先放入万能字典，查看是事件还是动作响应
+		var check map[string]interface{}
+		err = json.Unmarshal(message, &check)
 		if err != nil {
 			log.Println("解析消息失败")
-			return core.Event{}, err
+			return nil, err
 		}
-		return event, nil
+		if _, exists := check["type"]; exists {
+			var event core.Event
+			err = json.Unmarshal(message, &event)
+			if err != nil {
+				log.Println("解析消息失败")
+				return nil, err
+			}
+			return &event, nil
+		} else {
+			var actionresponse core.ActionResponse
+			err = json.Unmarshal(message, &actionresponse)
+			fmt.Println(actionresponse)
+			if err != nil {
+				log.Println("解析消息失败")
+				return nil, err
+			}
+			return &actionresponse, nil
+		}
+
 	}
 }
 
@@ -114,23 +133,31 @@ func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 	// TODO: 实现 HTTP 调用
 	// 构建消息段
 	payload := map[string]interface{}{
-		"group_id":    groupID,
-		"detail_type": "group",
-		"message": []map[string]interface{}{
-			{
-				"type": "text",
-				"data": map[string]interface{}{"text": msg},
+		"action": "send_message",
+		"params": map[string]interface{}{
+			"group_id":    groupID,
+			"detail_type": "group",
+			"message": []map[string]interface{}{
+				{
+					"type": "text",
+					"data": map[string]interface{}{"text": msg},
+				},
 			},
 		},
 	}
 	// 序列化
 	body, _ := json.Marshal(payload)
-	// 发送 POST 请求
-	resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
+	// // 发送 POST 请求
+	// resp, err := http.Post(a.httpURL+"/send_message", "application/json", bytes.NewBuffer(body))
+	// if err != nil {
+	// 	return err
+	// }
+	// defer resp.Body.Close()
+	// return nil
+	err := a.conn.WriteMessage(websocket.TextMessage, body)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 	return nil
 }
 

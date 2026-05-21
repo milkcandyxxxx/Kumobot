@@ -18,7 +18,7 @@ func (b *Bot) Dispatch(event *core.Event) {
 	if event.Type != "message" {
 		return
 	}
-	b.event = event
+	b.Event = event
 	mu.Lock()
 	defer mu.Unlock()
 	sort.Slice(plugins, func(i, j int) bool {
@@ -32,16 +32,16 @@ func (b *Bot) Dispatch(event *core.Event) {
 			switch m.Type {
 			// 以什么什么开头
 			case "startswith":
-				matched = strings.HasPrefix(m.Pattern, b.event.GetMessageText())
+				matched = strings.HasPrefix(m.Pattern, b.Event.GetMessageText())
 			// 指令
 			case "cmd":
-				matched = isCmd(m.Pattern, b.event.GetMessageText())
+				matched = isCmd(m.Pattern, b.Event.GetMessageText())
 			// 正则
 			case "regex":
-				matched = isRegex(m.Pattern, b.event.GetMessageText())
+				matched = isRegex(m.Pattern, b.Event.GetMessageText())
 			// 以什么什么结尾
 			case "endswith":
-				matched = strings.HasSuffix(m.Pattern, b.event.GetMessageText())
+				matched = strings.HasSuffix(m.Pattern, b.Event.GetMessageText())
 			}
 			// 匹配则执行
 			if matched {

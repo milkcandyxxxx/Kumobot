@@ -14,7 +14,7 @@ type Adapter interface {
 	// SendPrivateMessage 发送私人消息
 	SendPrivateMessage(userID string, msg string) error
 	// ReadMessage 读取消息
-	ReadMessage() (core.Event, error)
+	ReadMessage() (core.Response, error)
 	// SendGroupMessage 发送群组消息
 	SendGroupMessage(groupID string, msg string) error
 	GetSelfInfo() (core.SelfInfRes, error)

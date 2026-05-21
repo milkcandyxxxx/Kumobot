@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	bot.OnPlugin("ping", "无", "milk", "无", "2", "true")
+	bot.OnPlugin("ping", "无", "milk", "无", "2", "false")
 	// 指定词语回复
 	bot.OnCommand("1", func(b *bot.Bot) {
 		b.Send("pong")
