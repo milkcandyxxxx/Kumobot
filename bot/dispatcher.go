@@ -7,14 +7,15 @@
 package bot
 
 import (
-	"github.com/milkcandyxxxx/Kumobot/core"
+	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"regexp"
 	"sort"
 	"strings"
 )
 
 // Dispatch 插件模块调度器
-func (b *Bot) Dispatch(event *core.Event) {
+func (b *Bot) Dispatch(event *adapter.Event) {
+
 	if event.Type != "message" {
 		return
 	}

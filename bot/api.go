@@ -8,7 +8,7 @@
 package bot
 
 import (
-	"github.com/milkcandyxxxx/Kumobot/core"
+	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"strconv"
 	"strings"
 )
@@ -75,7 +75,7 @@ func OnPlugin(info ...string) {
 }
 
 // SendPrivateMessage 发送私聊信息
-func (b *Bot) SendPrivateMessage(userID string, msg string) error {
+func (b *Bot) SendPrivateMessage(userID interface{}, msg string) error {
 	return b.adapter.SendPrivateMessage(userID, msg)
 }
 
@@ -85,11 +85,11 @@ func (b *Bot) SendGroupMessage(groupID string, msg string) error {
 }
 
 // GetUserInfo 获取用户信息
-func (b *Bot) GetUserInfo(userID string) (core.UserInfo, error) {
+func (b *Bot) GetUserInfo(userID string) (adapter.UserInfo, error) {
 	return b.adapter.GetUserInfo(userID)
 }
 
 // GetSelfInfo 获取自身数据
-func (b *Bot) GetSelfInfo() (core.SelfInfRes, error) {
+func (b *Bot) GetSelfInfo() (adapter.SelfInfRes, error) {
 	return b.adapter.GetSelfInfo()
 }

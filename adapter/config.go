@@ -1,4 +1,4 @@
-package core
+package adapter
 
 import (
 	"github.com/spf13/viper"

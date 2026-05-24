@@ -16,6 +16,5 @@ func init() {
 	// 指定词语回复
 	bot.OnCommand("1", func(b *bot.Bot) {
 		b.Send(fmt.Sprintf("%#v", b.Event))
-
 	})
 }

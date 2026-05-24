@@ -8,17 +8,16 @@ package bot
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
-	"github.com/milkcandyxxxx/Kumobot/core"
 	"strings"
 )
 
 // Bot bot适配器
 type Bot struct {
-	config  *core.Config    // 机器人配置
+	config  *adapter.Config // 机器人配置
 	adapter adapter.Adapter // 适配器选择
 	Prefix  string
-	Module  []func(event *core.Event)
-	Event   *core.Event
+	Module  []func(event *adapter.Event)
+	Event   *adapter.Event
 }
 
 // GetUserInfo
@@ -27,31 +26,34 @@ type Bot struct {
 // }
 
 // NewBot 新建bot
-func NewBot(config *core.Config) *Bot {
+func NewBot(config *adapter.Config, prefix string) *Bot {
 	return &Bot{
 		config: config,
+		Prefix: prefix,
 	}
 }
 
 // OnEvent 注册事件监听函数
-func (b *Bot) OnEvent(module func(event *core.Event)) {
+func (b *Bot) OnEvent(module func(event *adapter.Event)) {
 	b.Module = append(b.Module, module)
 }
 
 func (b *Bot) Execute() {
 	b.adapter.Connect()
+
 	for {
 		msg, _ := b.adapter.ReadMessage()
-		event, ok := msg.(*core.Event)
+		event, ok := msg.(*adapter.Event)
+
 		if !ok {
-			continue // 不是事件，跳过
+			continue
 		}
 		if event.Type == "message" {
+
 			if !strings.HasPrefix(event.AltMessage, b.Prefix) {
-				return
+				continue
 			}
 			event.AltMessage = event.AltMessage[len(b.Prefix):]
-
 			for _, h := range b.Module {
 				h(event)
 			}

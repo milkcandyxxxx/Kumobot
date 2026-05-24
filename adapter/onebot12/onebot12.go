@@ -1,10 +1,10 @@
-package adapter
+package onebot12
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/milkcandyxxxx/Kumobot/core"
+	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"io"
 	"log"
 	"net/http"
@@ -12,29 +12,25 @@ import (
 	"strings"
 )
 
-// OneBotAdapter 适配器结构体
-type OneBotAdapter struct {
+// OneBot12Adapter 适配器结构体
+type Adapter struct {
 	wsUrl   string
 	httpURL string
 	conn    *websocket.Conn
-	module  []func(event *core.Event)
-	prefix  string
 }
 
-// NewOneBotAdapter  适配器结构体
-func NewOneBotAdapter(wsUrl string, httpUrl string, prefix string) *OneBotAdapter {
-	return &OneBotAdapter{
+// NewOneBotAdapter  新建适配器结构体
+func NewOneBotAdapter(wsUrl string, httpUrl string) *Adapter {
+	return &Adapter{
 		wsUrl:   wsUrl,
 		httpURL: httpUrl,
-		module:  []func(event *core.Event){},
-		prefix:  prefix,
 	}
 }
 
 // 接口实现
 
 // Connect 连接
-func (a *OneBotAdapter) Connect() error {
+func (a *Adapter) Connect() error {
 	// 检测地址合法性
 	wslAddr, err := url.Parse(a.wsUrl)
 	if err != nil {
@@ -52,7 +48,7 @@ func (a *OneBotAdapter) Connect() error {
 }
 
 // Disconnect 断开连接
-func (a *OneBotAdapter) Disconnect() error {
+func (a *Adapter) Disconnect() error {
 	// 避免未连接就断开
 	if a.conn != nil {
 		return a.conn.Close()
@@ -61,10 +57,11 @@ func (a *OneBotAdapter) Disconnect() error {
 }
 
 // ReadMessage 读取信息
-func (a *OneBotAdapter) ReadMessage() (core.Response, error) {
+func (a *Adapter) ReadMessage() (interface{}, error) {
 	for {
 
 		_, message, err := a.conn.ReadMessage()
+		fmt.Println(string(message))
 		if err != nil {
 			log.Println("获取消息失败")
 		}
@@ -72,34 +69,47 @@ func (a *OneBotAdapter) ReadMessage() (core.Response, error) {
 		var check map[string]interface{}
 		err = json.Unmarshal(message, &check)
 		if err != nil {
-			log.Println("解析消息失败")
-			return nil, err
+			log.Println("解析消息失败", err)
+			continue
 		}
 		if _, exists := check["type"]; exists {
-			var event core.Event
-			err = json.Unmarshal(message, &event)
-			// fmt.Println(event)
+			var One12Event Event
+			err = json.Unmarshal(message, &One12Event)
 			if err != nil {
-				log.Println("解析消息失败")
-				return nil, err
+				log.Println("解析消息失败", err)
+				continue
 			}
-			return &event, nil
+			event := &adapter.Event{
+				ID:         One12Event.ID,
+				Type:       One12Event.Type,
+				Self:       One12Event.Self,
+				Time:       One12Event.Time,
+				DetailType: One12Event.DetailType,
+				SubType:    One12Event.SubType,
+				MessageID:  One12Event.MessageID,
+				Message:    One12Event.Message,
+				UserID:     One12Event.UserID,
+				GuildID:    One12Event.GuildID,
+				GroupID:    One12Event.GroupID,
+				AltMessage: One12Event.AltMessage,
+			}
+			return event, nil
 		} else {
-			var actionresponse core.ActionResponse
-			err = json.Unmarshal(message, &actionresponse)
-			fmt.Println(actionresponse)
+			var response adapter.Response
+			err = json.Unmarshal(message, &response)
+			fmt.Println(response)
 			if err != nil {
 				log.Println("解析消息失败")
 				return nil, err
 			}
-			return &actionresponse, nil
+			return &response, nil
 		}
 
 	}
 }
 
 // SendPrivateMessage 发送私聊消息
-func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
+func (a *Adapter) SendPrivateMessage(userID string, msg string) error {
 	// 构建消息段
 	payload := map[string]interface{}{
 		"action": "send_message",
@@ -136,7 +146,7 @@ func (a *OneBotAdapter) SendPrivateMessage(userID string, msg string) error {
 }
 
 // SendGroupMessage 发送群聊消息
-func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
+func (a *Adapter) SendGroupMessage(groupID string, msg string) error {
 	// 构建消息段
 	payload := map[string]interface{}{
 		"action": "send_message",
@@ -168,33 +178,33 @@ func (a *OneBotAdapter) SendGroupMessage(groupID string, msg string) error {
 }
 
 // GetSelfInfo 获取机器人自身信息
-func (a *OneBotAdapter) GetSelfInfo() (core.SelfInfRes, error) {
+func (a *Adapter) GetSelfInfo() (adapter.SelfInfRes, error) {
 	res, err := http.Post(a.httpURL+"/get_self_info", "application/json", nil)
 	if err != nil {
-		return core.SelfInfRes{}, err
+		return adapter.SelfInfRes{}, err
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
-	var selfinfo core.SelfInfRes
+	var selfinfo adapter.SelfInfRes
 	err = json.Unmarshal(body, &selfinfo)
 	return selfinfo, nil
 }
 
 // GetUserInfo 获取用户信息
-func (a *OneBotAdapter) GetUserInfo(userID string) (core.UserInfo, error) {
+func (a *Adapter) GetUserInfo(userID string) (adapter.UserInfo, error) {
 	id := strings.NewReader(userID)
 	res, err := http.Post(a.httpURL+"/get_user_info", "application/json", id)
 	if err != nil {
-		return core.UserInfo{}, err
+		return adapter.UserInfo{}, err
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
-	var selfinfo core.SelfInfRes
+	var selfinfo adapter.SelfInfRes
 	err = json.Unmarshal(body, &selfinfo)
-	return core.UserInfo{}, nil
+	return adapter.UserInfo{}, nil
 }
 
-func (a *OneBotAdapter) DeleteMessage(messageId string) error {
+func (a *Adapter) DeleteMessage(messageId string) error {
 	payload := map[string]interface{}{
 		"action": "delete_message",
 		"params": map[string]interface{}{
@@ -209,3 +219,35 @@ func (a *OneBotAdapter) DeleteMessage(messageId string) error {
 	}
 	return nil
 }
+
+// Event OneBot 12 标准事件结构
+/* message.private 私聊消息标准
+{
+    "id": "b6e65187-5ac0-489c-b431-53078e9d2bbb",
+    "self": {
+        "platform": "qq",
+        "user_id": "123234"
+    },
+    "time": 1632847927.599013,
+    "type": "message",
+    "detail_type": "private",
+    "sub_type": "",
+    "message_id": "6283",
+    "message": [
+        {
+            "type": "text",
+            "data": {
+                "text": "OneBot is not a bot"
+            }
+        },
+        {
+            "type": "image",
+            "data": {
+                "file_id": "e30f9684-3d54-4f65-b2da-db291a477f16"
+            }
+        }
+    ],
+    "alt_message": "OneBot is not a bot[图片]",
+    "user_id": "123456788"
+}
+*/
