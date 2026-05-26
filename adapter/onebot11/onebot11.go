@@ -98,9 +98,9 @@ func (a *Adapter) SendGroupMessage(atUserID string, groupID string, msg string) 
 	return nil
 }
 
-func (a *Adapter) GetSelfInfo() (adapter.SelfInfRes, error) {
-	// TODO implement me
-	panic("implement me")
+// GetSelfInfo 获取自身信息
+func (a *Adapter) GetSelfInfo() (adapter.SelfInfo, error) {
+
 }
 
 func (a *Adapter) GetUserInfo(userID string) (adapter.UserInfo, error) {
@@ -121,6 +121,8 @@ func NewOneBotAdapter(c adapter.Config) *Adapter {
 		token:   c.Onebots.Token,
 	}
 }
+
+// Connect 连接ws
 func (a *Adapter) Connect() error {
 	// 检测地址合法性
 	wslAddr, err := url.Parse(a.wsUrl)

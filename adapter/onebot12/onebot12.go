@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 // Adapter OneBot12Adapter 适配器结构体
@@ -192,15 +191,6 @@ func (a *Adapter) GetSelfInfo() (adapter.SelfInfRes, error) {
 
 // GetUserInfo 获取用户信息
 func (a *Adapter) GetUserInfo(userID string) (adapter.UserInfo, error) {
-	id := strings.NewReader(userID)
-	res, err := http.Post(a.httpURL+"/get_user_info", "application/json", id)
-	if err != nil {
-		return adapter.UserInfo{}, err
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	var selfinfo adapter.SelfInfRes
-	err = json.Unmarshal(body, &selfinfo)
 	return adapter.UserInfo{}, nil
 }
 

@@ -60,6 +60,7 @@ type OB11GroupMessageEvent struct {
 	GroupID   int64              `json:"group_id"`
 }
 
+// ToAdapterEvent 将 OB11 的群聊事件通用的 adapter.Event
 func (o *OB11GroupMessageEvent) ToAdapterEvent() *adapter.Event {
 	return &adapter.Event{
 		Time:       o.Time,
@@ -75,3 +76,5 @@ func (o *OB11GroupMessageEvent) ToAdapterEvent() *adapter.Event {
 		GroupID:    strconv.FormatInt(o.GroupID, 10),
 	}
 }
+
+// GetLoginInfo 响应

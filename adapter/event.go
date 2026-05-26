@@ -1,9 +1,14 @@
 package adapter
 
 // Response 响应体的总接口
+type Response struct {
+	Echo     string
+	UserId   string
+	NickName string
+}
 
-type Event struct {
-1	// 共用字段
+// Event 上下文总接口
+type Event struct { // 共用字段
 	Time       int64            // 事件时间戳
 	SubType    string           // 事件子类型
 	MessageID  string           // 消息唯一ID
@@ -18,12 +23,12 @@ type Event struct {
 	SelfID      int64      // 机器人自身账号
 	Anonymous   any        // 匿名发言信息
 	Sender      OB11Sender // 发送者详情
-	
+
 	// OneBot12 专属字段
 	ID   string  // 事件标识
 	Self BotSelf // 自身账号信息
 	Type string  // 事件主类型
-	
+
 	GuildID string // 频道ID
 }
 
@@ -48,7 +53,7 @@ func (e *Event) GetMessageText() string {
 	for _, msg := range e.Message {
 		if msg.Type == "text" {
 			msgAll += msg.Data["text"].(string)
-			
+
 		}
 	}
 	return msgAll
@@ -60,13 +65,8 @@ type OB11Sender struct {
 	Sex      string `json:"sex"`
 	Age      int    `json:"age"`
 }
-type Response struct {
-	Status  string `json:"status"`
-	Retcode int    `json:"retcode"`
-	Data    struct {
-		MessageId string  `json:"message_id"`
-		Time      float64 `json:"time"`
-	} `json:"data"`
-	Message string `json:"message"`
-	Echo    string `json:"echo"`
+
+type SelfInfo struct {
+	UserID   string // OB11 QQ 号
+	Nickname string // OB11 QQ 昵称
 }
