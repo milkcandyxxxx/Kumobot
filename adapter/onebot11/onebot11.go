@@ -15,6 +15,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
+	"time"
 )
 
 // Adapter OneBot11Adapter 适配器结构体
@@ -23,6 +25,8 @@ type Adapter struct {
 	httpURL string
 	conn    *websocket.Conn
 	token   string
+	mu      sync.RWMutex
+	echo    map[string]chan adapter.Response
 }
 
 // SendPrivateMessage 发送私聊信息
@@ -42,6 +46,35 @@ func (a *Adapter) SendPrivateMessage(userID interface{}, msg string) error {
 		return err
 	}
 	return nil
+}
+
+func (a *Adapter) CallAction(action string, params map[string]string) (adapter.Response, error) {
+	payload := map[string]interface{}{
+		"action": action,
+		"params": params,
+	}
+	echo := time.Now().UnixNano()
+	echoStr := strconv.FormatInt(echo, 10)
+	payload["echo"] = echoStr
+	ch := make(chan adapter.Response, 1)
+	a.mu.Lock()
+	a.echo[echoStr] = ch
+	a.mu.Unlock()
+	defer func() {
+		a.mu.Lock()
+		delete(a.echo, action)
+		a.mu.Unlock()
+	}()
+	// 序列化
+	body, _ := json.Marshal(payload)
+	err := a.conn.WriteMessage(websocket.TextMessage, body)
+	if err != nil {
+		return adapter.Response{}, err
+	}
+	select {
+	case resp := <-ch:
+		return resp, nil
+	}
 }
 
 // SendGroupMessage  发送群组信息
@@ -100,7 +133,8 @@ func (a *Adapter) SendGroupMessage(atUserID string, groupID string, msg string) 
 
 // GetSelfInfo 获取自身信息
 func (a *Adapter) GetSelfInfo() (adapter.SelfInfo, error) {
-
+	// TODO implement me
+	panic("implement me")
 }
 
 func (a *Adapter) GetUserInfo(userID string) (adapter.UserInfo, error) {
@@ -119,6 +153,7 @@ func NewOneBotAdapter(c adapter.Config) *Adapter {
 		wsUrl:   c.Onebots.WsURL,
 		httpURL: c.Onebots.HttpURL,
 		token:   c.Onebots.Token,
+		echo:    make(map[string]chan adapter.Response),
 	}
 }
 
@@ -207,8 +242,12 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 		} else {
 			var res adapter.Response
 			err = json.Unmarshal(message, &res)
-			if err != nil {
-				return nil, err
+			a.mu.Lock()
+			ch, ok := a.echo[res.Echo]
+			a.mu.Unlock()
+			if ok {
+				ch <- res
+				return res, nil
 			}
 			return res, nil
 		}

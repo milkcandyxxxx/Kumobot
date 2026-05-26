@@ -2,9 +2,14 @@ package adapter
 
 // Response 响应体的总接口
 type Response struct {
-	Echo     string
-	UserId   string
-	NickName string
+	Status int          `json:"status"`
+	Data   ResponseData `json:"data"`
+	Echo   string       `json:"echo"`
+}
+
+type ResponseData struct {
+	UserID   int64  `json:"user_id"`
+	Nickname string `json:"nickname"`
 }
 
 // Event 上下文总接口

@@ -16,4 +16,5 @@ type Adapter interface {
 	GetSelfInfo() (SelfInfo, error)
 	GetUserInfo(userID string) (UserInfo, error)
 	DeleteMessage(messageId string) error
+	CallAction(action string, params map[string]string) (Response, error)
 }

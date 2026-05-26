@@ -19,7 +19,10 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 	if event.Type != "message" {
 		return
 	}
-	b.Event = event
+	ctx := &Ctx{
+		Bot:   b,
+		Event: event,
+	}
 	mu.Lock()
 	defer mu.Unlock()
 	sort.Slice(plugins, func(i, j int) bool {
@@ -33,20 +36,20 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 			switch m.Type {
 			// 以什么什么开头
 			case "startswith":
-				matched = strings.HasPrefix(m.Pattern, b.Event.GetMessageText())
+				matched = strings.HasPrefix(m.Pattern, event.GetMessageText())
 			// 指令
 			case "cmd":
-				matched = isCmd(m.Pattern, b.Event.GetMessageText())
+				matched = isCmd(m.Pattern, event.GetMessageText())
 			// 正则
 			case "regex":
-				matched = isRegex(m.Pattern, b.Event.GetMessageText())
+				matched = isRegex(m.Pattern, event.GetMessageText())
 			// 以什么什么结尾
 			case "endswith":
-				matched = strings.HasSuffix(m.Pattern, b.Event.GetMessageText())
+				matched = strings.HasSuffix(m.Pattern, event.GetMessageText())
 			}
 			// 匹配则执行
 			if matched {
-				m.Handler(b)
+				go m.Handler(ctx)
 			}
 			// 判断是否独家（向下传递）
 			if p.Exclusive {

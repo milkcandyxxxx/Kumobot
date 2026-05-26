@@ -6,16 +6,17 @@
 
 package plugins
 
-//
-// import (
-// 	"github.com/milkcandyxxxx/Kumobot/bot"
-// )
-//
-// func init() {
-// 	bot.OnPlugin("ping", "无", "milk", "无", "2", "false")
-// 	// 指定词语回复
-// 	bot.OnCommand("1", func(b *bot.Bot) {
-// 		// b.Send(b.Event.UserID)
-// 		b.Send(b.Event.UserID)
-// 	})
-// }
+import (
+	"fmt"
+	"github.com/milkcandyxxxx/Kumobot/bot"
+)
+
+func init() {
+	bot.OnPlugin("ping", "无", "milk", "无", "2", "false")
+	// 指定词语回复
+	bot.OnCommand("1", func(c *bot.Ctx) {
+		// b.Send(b.Event.UserID)
+		a, _ := c.CallAction("get_login_info", map[string]string{})
+		fmt.Printf("!!!!!!!!!!!!!!!!!%#v/n", a)
+	})
+}

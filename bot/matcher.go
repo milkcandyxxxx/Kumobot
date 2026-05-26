@@ -7,7 +7,7 @@
 package bot
 
 // Handler 处理函数（回调函数定义）
-type Handler func(b *Bot)
+type Handler func(ctx *Ctx)
 
 // Matcher 匹配器，用于指令的匹配
 type Matcher struct {
