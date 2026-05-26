@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// OneBot12Adapter 适配器结构体
+// Adapter OneBot12Adapter 适配器结构体
 type Adapter struct {
 	wsUrl   string
 	httpURL string
