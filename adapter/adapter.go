@@ -12,7 +12,7 @@ type Adapter interface {
 	// ReadMessage 读取消息
 	ReadMessage() (interface{}, error)
 	// SendGroupMessage 发送群组消息
-	SendGroupMessage(groupID string, msg string) error
+	SendGroupMessage(groupID string, msg string, AtUserID string) error
 	GetSelfInfo() (SelfInfRes, error)
 	GetUserInfo(userID string) (UserInfo, error)
 	DeleteMessage(messageId string) error

@@ -13,16 +13,6 @@ import (
 	"strings"
 )
 
-func (b *Bot) Send(msg string) error {
-	if b.Event.DetailType == "private" {
-		return b.SendPrivateMessage(b.Event.UserID, msg)
-	}
-	if b.Event.DetailType == "channel" {
-		return b.SendGroupMessage(b.Event.GroupID, msg)
-	}
-	return nil
-}
-
 // GetUserInfo 获取用户信息
 // func (c *Ctx) GetUserInfo(id string) (core.UserInfo, error) {
 // 	return c.bot.GetUserInfo()
@@ -32,6 +22,8 @@ func (b *Bot) Send(msg string) error {
 func (b *Bot) ExtractPlainText() string {
 	return strings.SplitN(b.Event.GetMessageText(), " ", 2)[1]
 }
+
+// ++++++++++++++++++++++++匹配机制++++++++++++++++++++++++
 
 // OnCommand 单匹配
 func OnCommand(cmd string, h Handler) {
@@ -52,6 +44,8 @@ func OnRegex(regex string, h Handler) {
 		Handler: h,
 	})
 }
+
+// ++++++++++++++++++++++++插件管理++++++++++++++++++++++++
 
 // OnPlugin 注册插件
 func OnPlugin(info ...string) {
@@ -74,15 +68,39 @@ func OnPlugin(info ...string) {
 	addPlugin(thisPlugin)
 }
 
+// ++++++++++++++++++++++++信息发送++++++++++++++++++++++++
+
 // SendPrivateMessage 发送私聊信息
-func (b *Bot) SendPrivateMessage(userID interface{}, msg string) error {
+func (b *Bot) SendPrivateMessage(userID string, msg string) error {
 	return b.adapter.SendPrivateMessage(userID, msg)
 }
 
-// SendGroupMessage 发送群里信息
-func (b *Bot) SendGroupMessage(groupID string, msg string) error {
-	return b.adapter.SendGroupMessage(groupID, msg)
+// SendGroupMessageAt 发送群里信息
+func (b *Bot) SendGroupMessageAt(atUserID string, groupID string, msg string) error {
+	return b.adapter.SendGroupMessage(atUserID, groupID, msg)
 }
+func (b *Bot) SendGroupMessage(groupID string, msg string) error {
+	return b.adapter.SendGroupMessage("", groupID, msg)
+}
+
+// Send 一键发送默认为回复（在哪触发的哪里回复）
+func (b *Bot) Send(msg string) error {
+	if b.Event.DetailType == "private" {
+		return b.SendPrivateMessage(b.Event.UserID, msg)
+	}
+	if b.Event.DetailType == "channel" || b.Event.DetailType == "group" {
+		return b.SendGroupMessageAt(b.Event.UserID, b.Event.GroupID, msg)
+	}
+	return nil
+}
+func (b *Bot) SendAt(atUserID string, msg string) error {
+	if b.Event.DetailType == "group" {
+		return b.SendGroupMessageAt(atUserID, b.Event.GroupID, msg)
+	}
+	return nil
+}
+
+// ++++++++++++++++++++++++信息获取++++++++++++++++++++++++
 
 // GetUserInfo 获取用户信息
 func (b *Bot) GetUserInfo(userID string) (adapter.UserInfo, error) {
