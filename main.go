@@ -19,10 +19,7 @@ func main() {
 	// 新建bot实例
 	b := bot.NewBot(&adapter.GlobalConfig, adapter.GlobalConfig.Bot.Prefix)
 	// 设置适配器
-	adp := onebot11.NewOneBotAdapter(
-		adapter.GlobalConfig.Onebots.WsURL,
-		adapter.GlobalConfig.Onebots.HttpURL,
-	)
+	adp := onebot11.NewOneBotAdapter(*b.Config)
 	b.SetAdapter(adp)
 	// 注册插件模块
 	b.OnEvent(func(event *adapter.Event) {
