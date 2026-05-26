@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // Adapter OneBot11Adapter 适配器结构体
@@ -21,8 +22,10 @@ type Adapter struct {
 	wsUrl   string
 	httpURL string
 	conn    *websocket.Conn
+	token   string
 }
 
+// SendPrivateMessage 发送私聊信息
 func (a *Adapter) SendPrivateMessage(userID interface{}, msg string) error {
 	// 构建消息段
 	payload := map[string]interface{}{
@@ -41,9 +44,58 @@ func (a *Adapter) SendPrivateMessage(userID interface{}, msg string) error {
 	return nil
 }
 
-func (a *Adapter) SendGroupMessage(groupID string, msg string) error {
-	// TODO implement me
-	panic("implement me")
+// SendGroupMessage  发送群组信息
+func (a *Adapter) SendGroupMessage(atUserID string, groupID string, msg string) error {
+	fmt.Println("触发SendGroupMessage")
+	// 构建消息段,因为总event获取的都是string，但是onebot11协议数字类型都是int
+	at, _ := strconv.ParseInt(atUserID, 10, 64)
+	g, _ := strconv.ParseInt(groupID, 10, 64)
+	payload := map[string]interface{}{}
+	if atUserID == "" {
+		payload = map[string]interface{}{
+			"action": "send_group_msg",
+			"params": map[string]interface{}{
+				"group_id": g,
+				"message": []interface{}{
+					map[string]interface{}{
+						"type": "text",
+						"data": map[string]interface{}{
+							"text": msg,
+						},
+					},
+				},
+			},
+		}
+	} else {
+		payload = map[string]interface{}{
+			"action": "send_group_msg",
+			"params": map[string]interface{}{
+				"group_id": g,
+				"message": []interface{}{
+					map[string]interface{}{
+						"type": "at",
+						"data": map[string]interface{}{
+							"qq": at,
+						},
+					},
+					map[string]interface{}{
+						"type": "text",
+						"data": map[string]interface{}{
+							"text": msg,
+						},
+					},
+				},
+			},
+		}
+	}
+
+	// 序列化
+	body, _ := json.Marshal(payload)
+	err := a.conn.WriteMessage(websocket.TextMessage, body)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *Adapter) GetSelfInfo() (adapter.SelfInfRes, error) {
@@ -62,10 +114,11 @@ func (a *Adapter) DeleteMessage(messageId string) error {
 }
 
 // NewOneBot11Adapter   新建适配器结构体
-func NewOneBotAdapter(wsUrl string, httpUrl string) *Adapter {
+func NewOneBotAdapter(c adapter.Config) *Adapter {
 	return &Adapter{
-		wsUrl:   wsUrl,
-		httpURL: httpUrl,
+		wsUrl:   c.Onebots.WsURL,
+		httpURL: c.Onebots.HttpURL,
+		token:   c.Onebots.Token,
 	}
 }
 func (a *Adapter) Connect() error {
@@ -77,7 +130,7 @@ func (a *Adapter) Connect() error {
 		return err
 	}
 	header := http.Header{}
-	header.Set("Authorization", "Bearer ~bcxCaBq0j4sZGjt")
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", a.token))
 	conn, _, err := websocket.DefaultDialer.Dial(wslAddr.String(), header)
 	if err != nil {
 		log.Println("连接失败")
@@ -131,20 +184,19 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 					return nil, err
 				}
 				// 为私聊
-				if oB11BaseMessageEvent.MessageType == "private" {
+				switch oB11BaseMessageEvent.MessageType {
+				case "private":
 					var oB11PrivateMessageEvent OB11PrivateMessageEvent
 					err = json.Unmarshal(message, &oB11PrivateMessageEvent)
-					event := &adapter.Event{
-						Time:       oB11PrivateMessageEvent.Time,
-						SelfId:     oB11PrivateMessageEvent.SelfId,
-						Type:       oB11PrivateMessageEvent.PostType,
-						DetailType: oB11PrivateMessageEvent.MessageType,
-						UserID:     oB11PrivateMessageEvent.UserId,
-						Message:    oB11PrivateMessageEvent.Message,
-						AltMessage: oB11PrivateMessageEvent.RawMessage,
-						SubType:    oB11PrivateMessageEvent.SubType,
-						Sender:     oB11PrivateMessageEvent.Sender,
-					}
+					event := oB11PrivateMessageEvent.ToAdapterEvent()
+
+					fmt.Println(event)
+					return event, nil
+				case "group":
+					var oB11GroupMessageEvent OB11GroupMessageEvent
+					err = json.Unmarshal(message, &oB11GroupMessageEvent)
+					event := oB11GroupMessageEvent.ToAdapterEvent()
+					fmt.Println(event)
 					return event, nil
 				}
 
