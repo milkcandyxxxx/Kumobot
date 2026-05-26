@@ -13,7 +13,7 @@ import (
 
 // Bot bot适配器
 type Bot struct {
-	config  *adapter.Config // 机器人配置
+	Config  *adapter.Config // 机器人配置
 	adapter adapter.Adapter // 适配器选择
 	Prefix  string
 	Module  []func(event *adapter.Event)
@@ -28,7 +28,7 @@ type Bot struct {
 // NewBot 新建bot
 func NewBot(config *adapter.Config, prefix string) *Bot {
 	return &Bot{
-		config: config,
+		Config: config,
 		Prefix: prefix,
 	}
 }

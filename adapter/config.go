@@ -14,6 +14,7 @@ type Config struct {
 type OnebotsConfig struct {
 	WsURL   string `mapstructure:"ws_url"`
 	HttpURL string `mapstructure:"http_url"`
+	Token   string `mapstructure:"token"`
 }
 
 // BotConfig 机器人配置结构体
