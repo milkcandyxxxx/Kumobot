@@ -3,26 +3,28 @@ package adapter
 // Response 响应体的总接口
 
 type Event struct {
-	// ========== 基础字段（所有事件都有） ==========
-	ID         string  `json:"id"`          // OB12独有
-	Self       BotSelf `json:"self"`        // OB12独有
-	Time       int64   `json:"time"`        // 共用，OB12 float64 / OB11 int64
-	Type       string  `json:"type"`        // 事件大类，OB12 type / OB11 post_type
-	DetailType string  `json:"detail_type"` // 详细类型，OB12 detail_type / OB11 message_type或notice_type
-	SubType    string  `json:"sub_type"`    // 子类型，共用
-	SelfId     int64   `json:"self_id"`     // OB11 机器人自身 QQ 号
-
-	Sender OB11Sender `json:"sender"`
-
-	// ========== 消息事件字段 ==========
-	MessageID interface{}      `json:"message_id"` // 消息ID，OB12 string / OB11 int32
-	Message   []MessageSegment `json:"message"`    // 消息段数组，共用；OB11 CQ码时转单text段
-	UserID    interface{}      `json:"user_id"`    // 发送者ID，OB12顶层 / OB11可能来自sender
-	GroupID   string           `json:"group_id"`   // 群ID，群聊才有
-	GuildID   string           `json:"guild_id"`   // OB12独有，频道ID
-
-	// ========== onebots平台扩展 ==========
-	AltMessage string `json:"alt_message,omitempty"` // 共用 OB12纯文本（onebots扩展），OB11可用raw_message
+1	// 共用字段
+	Time       int64            // 事件时间戳
+	SubType    string           // 事件子类型
+	MessageID  string           // 消息唯一ID
+	Message    []MessageSegment // 消息段数组
+	UserID     string           // 发送者账号
+	GroupID    string           // 群组账号
+	AltMessage string           // 纯文本
+	DetailType string           // 事件细分类型,OB11为MessageType
+	// OneBot11 专属字段
+	PostType    string     // 事件大类
+	MessageType string     // 消息类型
+	SelfID      int64      // 机器人自身账号
+	Anonymous   any        // 匿名发言信息
+	Sender      OB11Sender // 发送者详情
+	
+	// OneBot12 专属字段
+	ID   string  // 事件标识
+	Self BotSelf // 自身账号信息
+	Type string  // 事件主类型
+	
+	GuildID string // 频道ID
 }
 
 type BotSelf struct {
@@ -46,7 +48,7 @@ func (e *Event) GetMessageText() string {
 	for _, msg := range e.Message {
 		if msg.Type == "text" {
 			msgAll += msg.Data["text"].(string)
-
+			
 		}
 	}
 	return msgAll
