@@ -1,16 +1,18 @@
 package adapter
 
+import "encoding/json"
+
 // Response 响应体的总接口
 type Response struct {
-	Status int          `json:"status"`
-	Data   ResponseData `json:"data"`
-	Echo   string       `json:"echo"`
+	Status int             `json:"status"`
+	Data   json.RawMessage `json:"data"`
+	Echo   string          `json:"echo"`
 }
 
-type ResponseData struct {
-	UserID   int64  `json:"user_id"`
-	Nickname string `json:"nickname"`
-}
+// type ResponseData struct {
+// 	UserID   int64  `json:"user_id"`
+// 	Nickname string `json:"nickname"`
+// }
 
 // Event 上下文总接口
 type Event struct { // 共用字段

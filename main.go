@@ -20,7 +20,8 @@ func main() {
 	b := bot.NewBot(&adapter.GlobalConfig, adapter.GlobalConfig.Bot.Prefix)
 	// 设置适配器
 	adp := onebot11.NewOneBotAdapter(*b.Config)
-	b.SetAdapter(adp)
+	b.SetAdapter(&bot.ON11{Adapter: adp})
+	bot.SetWebhook(b)
 	// 注册插件模块
 	b.OnEvent(func(event *adapter.Event) {
 		b.Dispatch(event)
@@ -30,3 +31,4 @@ func main() {
 
 	select {}
 }
+

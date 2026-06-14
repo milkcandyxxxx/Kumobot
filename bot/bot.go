@@ -8,6 +8,7 @@ package bot
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
+	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
 	"strings"
 )
 
@@ -65,10 +66,29 @@ func (b *Bot) Runbot() {
 }
 
 // SetAdapter 设置适配器
-func (b *Bot) SetAdapter(adapter adapter.Adapter) {
-	b.adapter = adapter
+func (b *Bot) SetAdapter(a adapter.Adapter) {
+	b.adapter = a
 }
 
-func (b *Bot) DeleteMessage(messageId string) error {
-	return b.adapter.DeleteMessage(messageId)
+// func (b *Bot) DeleteMessage(messageId string) error {
+// 	return b.adapter.DeleteMessage(messageId)
+// }
+
+func (b *Bot) CallAction(action string, params map[string]string) (adapter.Response, error) {
+	return b.adapter.(*onebot11.Adapter).CallAction(action, params)
 }
+
+// 暂时用于消息推送的解决方案
+var Webhook *Bot
+
+func SetWebhook(b *Bot) {
+	Webhook = b
+}
+
+// func SendGroupMessage(groupID string, msg string) error {
+// 	return Webhook.adapter.SendGroupMessage("1910399844", groupID, msg)
+// }
+
+// func SendPrivateMessage(userID string, msg string) error {
+// 	return Webhook.adapter.SendPrivateMessage(userID, msg)
+// }

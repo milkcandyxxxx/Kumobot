@@ -9,6 +9,7 @@ package bot
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
+	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
 	"strconv"
 	"strings"
 )
@@ -19,7 +20,11 @@ import (
 //		return c.bot.GetUserInfo()
 //	}
 type Ctx struct {
-	Bot   *Bot
+	Bot  *Bot
+	ON11 *ON11
+}
+type ON11 struct {
+	*onebot11.Adapter
 	Event *adapter.Event
 }
 
@@ -77,41 +82,60 @@ func OnPlugin(info ...string) {
 
 // SendPrivateMessage 发送私聊信息
 func (c *Ctx) SendPrivateMessage(userID string, msg string) error {
-	return c.Bot.adapter.SendPrivateMessage(userID, msg)
+
+	return c.ON11.SendPrivateMessage(userID, msg)
 }
 
 // SendGroupMessageAt 发送群里信息
-func (c *Ctx) SendGroupMessageAt(atUserID string, groupID string, msg string) error {
-	return c.Bot.adapter.SendGroupMessage(atUserID, groupID, msg)
-}
-func (c *Ctx) SendGroupMessage(groupID string, msg string) error {
-	return c.Bot.adapter.SendGroupMessage("", groupID, msg)
+func (o *ON11) SendGroupMessageAt(atUserID string, groupID string, msg string) error {
+	return o.SendGroupMessage(atUserID, groupID, msg)
 }
 
+// func (c *Ctx) SendGroupMessage(groupID string, msg string) error {
+// 	return c.ON11.SendGroupMessage("", groupID, msg)
+// }
+// func SendGroupMessageAt() {
+// 	return
+// }
+
 // Send 一键发送默认为回复（在哪触发的哪里回复）
-func (c *Ctx) Send(msg string) error {
-	if c.Bot.Event.DetailType == "private" {
-		return c.SendPrivateMessage(c.Bot.Event.UserID, msg)
+func (o *ON11) Send(msg string) error {
+	if o.Event.DetailType == "private" {
+		return o.SendPrivateMessage(o.Event.UserID, msg)
 	}
-	if c.Bot.Event.DetailType == "channel" || c.Bot.Event.DetailType == "group" {
-		return c.SendGroupMessageAt(c.Bot.Event.UserID, c.Event.GroupID, msg)
-	}
-	return nil
-}
-func (c *Ctx) SendAt(atUserID string, msg string) error {
-	if c.Event.DetailType == "group" {
-		return c.SendGroupMessageAt(atUserID, c.Event.GroupID, msg)
+	if o.Event.DetailType == "channel" || o.Event.DetailType == "group" {
+		return o.SendGroupMessageAt(o.Event.UserID, o.Event.GroupID, msg)
 	}
 	return nil
 }
+
+// func (c *Ctx) SendAt(atUserID string, msg string) error {
+// 	if c.Event.DetailType == "group" {
+// 		return c.SendGroupMessageAt(atUserID, c.Event.GroupID, msg)
+// 	}
+// 	return nil
+// }
 
 // ++++++++++++++++++++++++信息获取++++++++++++++++++++++++
 
-// GetUserInfo 获取用户信息
-func (c *Ctx) GetUserInfo(userID string) (adapter.UserInfo, error) {
-	return c.Bot.adapter.GetUserInfo(userID)
-}
-func (c *Ctx) CallAction(action string, params map[string]string) (adapter.Response, error) {
+// // GetUserInfo 获取用户信息
+// func (c *Ctx) GetUserInfo(userID string) (adapter.UserInfo, error) {
+// 	return c.Bot.adapter.GetUserInfo(userID)
+// }
 
-	return c.Bot.adapter.CallAction(action, nil)
+// LoginInfo 自身信息
+type LoginInfo struct {
+	UserID   int64  `json:"user_id"`
+	Nickname string `json:"nickname"`
 }
+
+// // 修改函数签名，返回具名结构体
+// func (c *Ctx) GetLoginInfo() (LoginInfo, error) {
+// 	a, _ := c.Bot.adapter.CallAction("get_login_info", nil)
+// 	var data LoginInfo
+// 	err := json.Unmarshal(a.Data, &data)
+// 	if err != nil {
+// 		return LoginInfo{}, err
+// 	}
+// 	return data, nil
+// }

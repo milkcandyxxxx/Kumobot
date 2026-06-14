@@ -19,9 +19,11 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 	if event.Type != "message" {
 		return
 	}
+	on11 := b.adapter.(*ON11)
+	on11.Event = event
 	ctx := &Ctx{
-		Bot:   b,
-		Event: event,
+		Bot:  b,
+		ON11: on11,
 	}
 	mu.Lock()
 	defer mu.Unlock()

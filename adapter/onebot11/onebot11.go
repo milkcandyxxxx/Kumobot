@@ -15,18 +15,18 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"sync"
 	"time"
 )
 
 // Adapter OneBot11Adapter 适配器结构体
 type Adapter struct {
-	wsUrl   string
-	httpURL string
-	conn    *websocket.Conn
-	token   string
-	mu      sync.RWMutex
-	echo    map[string]chan adapter.Response
+	*adapter.AdapterInfo
+}
+
+func NewOneBotAdapter(c adapter.Config) *Adapter {
+	return &Adapter{
+		AdapterInfo: adapter.NewAdapter(c),
+	}
 }
 
 // SendPrivateMessage 发送私聊信息
@@ -41,13 +41,14 @@ func (a *Adapter) SendPrivateMessage(userID interface{}, msg string) error {
 	}
 	// 序列化
 	body, _ := json.Marshal(payload)
-	err := a.conn.WriteMessage(websocket.TextMessage, body)
+	err := a.Conn.WriteMessage(websocket.TextMessage, body)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// CallAction 执行特定方法用于处理某些协议特定的api
 func (a *Adapter) CallAction(action string, params map[string]string) (adapter.Response, error) {
 	payload := map[string]interface{}{
 		"action": action,
@@ -57,17 +58,17 @@ func (a *Adapter) CallAction(action string, params map[string]string) (adapter.R
 	echoStr := strconv.FormatInt(echo, 10)
 	payload["echo"] = echoStr
 	ch := make(chan adapter.Response, 1)
-	a.mu.Lock()
-	a.echo[echoStr] = ch
-	a.mu.Unlock()
+	a.Mu.Lock()
+	a.Echo[echoStr] = ch
+	a.Mu.Unlock()
 	defer func() {
-		a.mu.Lock()
-		delete(a.echo, action)
-		a.mu.Unlock()
+		a.Mu.Lock()
+		delete(a.Echo, action)
+		a.Mu.Unlock()
 	}()
 	// 序列化
 	body, _ := json.Marshal(payload)
-	err := a.conn.WriteMessage(websocket.TextMessage, body)
+	err := a.Conn.WriteMessage(websocket.TextMessage, body)
 	if err != nil {
 		return adapter.Response{}, err
 	}
@@ -124,7 +125,7 @@ func (a *Adapter) SendGroupMessage(atUserID string, groupID string, msg string) 
 
 	// 序列化
 	body, _ := json.Marshal(payload)
-	err := a.conn.WriteMessage(websocket.TextMessage, body)
+	err := a.Conn.WriteMessage(websocket.TextMessage, body)
 	if err != nil {
 		return err
 	}
@@ -147,41 +148,41 @@ func (a *Adapter) DeleteMessage(messageId string) error {
 	panic("implement me")
 }
 
-// NewOneBot11Adapter   新建适配器结构体
-func NewOneBotAdapter(c adapter.Config) *Adapter {
-	return &Adapter{
-		wsUrl:   c.Onebots.WsURL,
-		httpURL: c.Onebots.HttpURL,
-		token:   c.Onebots.Token,
-		echo:    make(map[string]chan adapter.Response),
-	}
-}
+// // NewOneBot11Adapter   新建适配器结构体
+// func NewOneBotAdapter(c adapter.Config) *Adapter {
+// 	return &Adapter{
+// 		WsUrl:   c.Onebots.WsURL,
+// 		httpURL: c.Onebots.HttpURL,
+// 		token:   c.Onebots.Token,
+// 		echo:    make(map[string]chan adapter.Response),
+// 	}
+// }
 
 // Connect 连接ws
 func (a *Adapter) Connect() error {
 	// 检测地址合法性
-	wslAddr, err := url.Parse(a.wsUrl)
+	wslAddr, err := url.Parse(a.WsUrl)
 	if err != nil {
 
 		log.Println("地址格式错误")
 		return err
 	}
 	header := http.Header{}
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", a.token))
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Token))
 	conn, _, err := websocket.DefaultDialer.Dial(wslAddr.String(), header)
 	if err != nil {
 		log.Println("连接失败")
 		return err
 	}
-	a.conn = conn
+	a.Conn = conn
 	return nil
 }
 
 // Disconnect 断开连接
 func (a *Adapter) Disconnect() error {
 	// 避免未连接就断开
-	if a.conn != nil {
-		return a.conn.Close()
+	if a.Conn != nil {
+		return a.Conn.Close()
 	}
 	return nil
 }
@@ -189,8 +190,7 @@ func (a *Adapter) Disconnect() error {
 // ReadMessage 读取信息
 func (a *Adapter) ReadMessage() (interface{}, error) {
 	for {
-
-		_, message, err := a.conn.ReadMessage()
+		_, message, err := a.Conn.ReadMessage()
 		fmt.Println(string(message))
 		if err != nil {
 			log.Println("获取消息失败")
@@ -226,7 +226,6 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 					var oB11PrivateMessageEvent OB11PrivateMessageEvent
 					err = json.Unmarshal(message, &oB11PrivateMessageEvent)
 					event := oB11PrivateMessageEvent.ToAdapterEvent()
-
 					fmt.Println(event)
 					return event, nil
 				case "group":
@@ -242,9 +241,9 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 		} else {
 			var res adapter.Response
 			err = json.Unmarshal(message, &res)
-			a.mu.Lock()
-			ch, ok := a.echo[res.Echo]
-			a.mu.Unlock()
+			a.Mu.Lock()
+			ch, ok := a.Echo[res.Echo]
+			a.Mu.Unlock()
 			if ok {
 				ch <- res
 				return res, nil
