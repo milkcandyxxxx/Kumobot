@@ -4,6 +4,7 @@ package main
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
+	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 
 	"github.com/milkcandyxxxx/Kumobot/bot"
 	_ "github.com/milkcandyxxxx/Kumobot/plugins"
@@ -20,7 +21,7 @@ func main() {
 	b := bot.NewBot(&adapter.GlobalConfig, adapter.GlobalConfig.Bot.Prefix)
 	// 设置适配器
 	adp := onebot11.NewOneBotAdapter(*b.Config)
-	b.SetAdapter(&bot.ON11{Adapter: adp})
+	b.SetAdapter(&ON11.ON11{Adapter: adp})
 	bot.SetWebhook(b)
 	// 注册插件模块
 	b.OnEvent(func(event *adapter.Event) {

@@ -8,8 +8,7 @@
 package bot
 
 import (
-	"github.com/milkcandyxxxx/Kumobot/adapter"
-	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
+	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"strconv"
 	"strings"
 )
@@ -21,11 +20,7 @@ import (
 //	}
 type Ctx struct {
 	Bot  *Bot
-	ON11 *ON11
-}
-type ON11 struct {
-	*onebot11.Adapter
-	Event *adapter.Event
+	ON11 *ON11.ON11
 }
 
 // ExtractPlainText 用于获取第一个参数
@@ -80,16 +75,11 @@ func OnPlugin(info ...string) {
 
 // ++++++++++++++++++++++++信息发送++++++++++++++++++++++++
 
-// SendPrivateMessage 发送私聊信息
-func (c *Ctx) SendPrivateMessage(userID string, msg string) error {
-
-	return c.ON11.SendPrivateMessage(userID, msg)
-}
-
-// SendGroupMessageAt 发送群里信息
-func (o *ON11) SendGroupMessageAt(atUserID string, groupID string, msg string) error {
-	return o.SendGroupMessage(atUserID, groupID, msg)
-}
+// // SendPrivateMessage 发送私聊信息
+// func (c *Ctx) SendPrivateMessage(userID string, msg string) (adapter.CommonResponse, error) {
+//
+// 	return c.ON11.SendPrivateMessage(userID, msg)
+// }
 
 // func (c *Ctx) SendGroupMessage(groupID string, msg string) error {
 // 	return c.ON11.SendGroupMessage("", groupID, msg)
@@ -97,17 +87,6 @@ func (o *ON11) SendGroupMessageAt(atUserID string, groupID string, msg string) e
 // func SendGroupMessageAt() {
 // 	return
 // }
-
-// Send 一键发送默认为回复（在哪触发的哪里回复）
-func (o *ON11) Send(msg string) error {
-	if o.Event.DetailType == "private" {
-		return o.SendPrivateMessage(o.Event.UserID, msg)
-	}
-	if o.Event.DetailType == "channel" || o.Event.DetailType == "group" {
-		return o.SendGroupMessageAt(o.Event.UserID, o.Event.GroupID, msg)
-	}
-	return nil
-}
 
 // func (c *Ctx) SendAt(atUserID string, msg string) error {
 // 	if c.Event.DetailType == "group" {

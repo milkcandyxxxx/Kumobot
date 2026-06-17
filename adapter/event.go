@@ -4,9 +4,16 @@ import "encoding/json"
 
 // Response 响应体的总接口
 type Response struct {
-	Status int             `json:"status"`
+	Status string          `json:"status"`
 	Data   json.RawMessage `json:"data"`
 	Echo   string          `json:"echo"`
+}
+type CommonResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		MessageId int `json:"message_id"`
+	} `json:"data"`
+	Echo string `json:"echo"`
 }
 
 // type ResponseData struct {

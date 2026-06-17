@@ -7,15 +7,15 @@
 package plugins
 
 import (
+	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/bot"
-	"time"
 )
 
 func init() {
 	bot.OnPlugin("time", "无", "milk", "无", "0", "false")
 	// 指定词语回复
 	bot.OnCommand("time", func(c *bot.Ctx) {
-		a := time.Now().Format(time.RFC3339)
-		c.ON11.Send(a)
+		d, _ := c.ON11.GetForwardMsg("1047161647")
+		fmt.Printf("@@@@@@@@@@%#v\n", d.Messages[1].Message[0].Data)
 	})
 }

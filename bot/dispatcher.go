@@ -8,6 +8,7 @@ package bot
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
+	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"regexp"
 	"sort"
 	"strings"
@@ -19,7 +20,7 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 	if event.Type != "message" {
 		return
 	}
-	on11 := b.adapter.(*ON11)
+	on11 := b.adapter.(*ON11.ON11)
 	on11.Event = event
 	ctx := &Ctx{
 		Bot:  b,

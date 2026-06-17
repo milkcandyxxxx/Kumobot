@@ -29,27 +29,8 @@ func NewOneBotAdapter(c adapter.Config) *Adapter {
 	}
 }
 
-// SendPrivateMessage 发送私聊信息
-func (a *Adapter) SendPrivateMessage(userID interface{}, msg string) error {
-	// 构建消息段
-	payload := map[string]interface{}{
-		"action": "send_private_msg",
-		"params": map[string]interface{}{
-			"user_id": userID,
-			"message": msg,
-		},
-	}
-	// 序列化
-	body, _ := json.Marshal(payload)
-	err := a.Conn.WriteMessage(websocket.TextMessage, body)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // CallAction 执行特定方法用于处理某些协议特定的api
-func (a *Adapter) CallAction(action string, params map[string]string) (adapter.Response, error) {
+func (a *Adapter) CallAction(action string, params map[string]interface{}) (adapter.Response, error) {
 	payload := map[string]interface{}{
 		"action": action,
 		"params": params,
@@ -63,7 +44,7 @@ func (a *Adapter) CallAction(action string, params map[string]string) (adapter.R
 	a.Mu.Unlock()
 	defer func() {
 		a.Mu.Lock()
-		delete(a.Echo, action)
+		delete(a.Echo, echoStr)
 		a.Mu.Unlock()
 	}()
 	// 序列化
@@ -74,89 +55,117 @@ func (a *Adapter) CallAction(action string, params map[string]string) (adapter.R
 	}
 	select {
 	case resp := <-ch:
+		fmt.Println("返还值", resp)
 		return resp, nil
 	}
 }
 
+// SendPrivateMessage 发送私聊信息
+func (a *Adapter) SendPrivateMessage(userID interface{}, msg interface{}) (int32, error) {
+	// 构建消息段
+	params := map[string]interface{}{
+		"user_id": userID,
+		"message": msg,
+	}
+	res, err := a.CallAction("send_private_msg", params)
+	if err != nil {
+		return 0, err
+	}
+	var Data struct {
+		MsgID int32 `json:"message_id"`
+	}
+	if err := json.Unmarshal(res.Data, &Data); err != nil {
+		return 0, err
+	}
+	return Data.MsgID, nil
+}
+
 // SendGroupMessage  发送群组信息
-func (a *Adapter) SendGroupMessage(atUserID string, groupID string, msg string) error {
-	fmt.Println("触发SendGroupMessage")
+func (a *Adapter) SendGroupMessage(groupID string, msg interface{}) (int32, error) {
 	// 构建消息段,因为总event获取的都是string，但是onebot11协议数字类型都是int
-	at, _ := strconv.ParseInt(atUserID, 10, 64)
-	g, _ := strconv.ParseInt(groupID, 10, 64)
-	payload := map[string]interface{}{}
-	if atUserID == "" {
-		payload = map[string]interface{}{
-			"action": "send_group_msg",
-			"params": map[string]interface{}{
-				"group_id": g,
-				"message": []interface{}{
-					map[string]interface{}{
-						"type": "text",
-						"data": map[string]interface{}{
-							"text": msg,
-						},
-					},
-				},
-			},
-		}
-	} else {
-		payload = map[string]interface{}{
-			"action": "send_group_msg",
-			"params": map[string]interface{}{
-				"group_id": g,
-				"message": []interface{}{
-					map[string]interface{}{
-						"type": "at",
-						"data": map[string]interface{}{
-							"qq": at,
-						},
-					},
-					map[string]interface{}{
-						"type": "text",
-						"data": map[string]interface{}{
-							"text": msg,
-						},
-					},
-				},
-			},
-		}
+
+	group, _ := strconv.ParseInt(groupID, 10, 64)
+	params := map[string]interface{}{
+		"group_id": group,
+		"message":  msg,
 	}
 
-	// 序列化
-	body, _ := json.Marshal(payload)
-	err := a.Conn.WriteMessage(websocket.TextMessage, body)
+	res, err := a.CallAction("send_group_msg", params)
+	if err != nil {
+		return 0, err
+	}
+	var Data struct {
+		MsgID int32 `json:"message_id"`
+	}
+	if err := json.Unmarshal(res.Data, &Data); err != nil {
+		return 0, err
+	}
+	return Data.MsgID, nil
+}
+
+// DeleteMsg  撤回消息
+func (a *Adapter) DeleteMsg(msgID int32) error {
+	params := map[string]interface{}{
+		"message_id": msgID,
+	}
+	_, err := a.CallAction("delete_msg", params)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// GetSelfInfo 获取自身信息
-func (a *Adapter) GetSelfInfo() (adapter.SelfInfo, error) {
-	// TODO implement me
-	panic("implement me")
+// GetMsgData GetMsg的返回结构体
+type GetMsgData struct {
+	Time        int32              `json:"time"`
+	MessageType string             `json:"message_type"`
+	MessageID   int32              `json:"message_id"`
+	RealID      int32              `json:"real_id"`
+	Sender      adapter.OB11Sender `json:"sender"`
+	Message     interface{}        `json:"message"`
 }
 
-func (a *Adapter) GetUserInfo(userID string) (adapter.UserInfo, error) {
-	// TODO implement me
-	panic("implement me")
+// GetForwardMsgData get_forward_msg 接口data统一结构体
+type GetForwardMsgData struct {
+	Messages []struct {
+		Message []struct {
+			Type string                 `json:"type"`
+			Data map[string]interface{} `json:"data"`
+		} `json:"message"`
+	} `json:"messages"`
 }
 
-func (a *Adapter) DeleteMessage(messageId string) error {
-	// TODO implement me
-	panic("implement me")
+// GetMsg 获取消息
+func (a *Adapter) GetMsg(msgID int32) (GetMsgData, error) {
+	params := map[string]interface{}{
+		"message_id": msgID,
+	}
+	res, err := a.CallAction("get_msg", params)
+	if err != nil {
+		return GetMsgData{}, err
+	}
+	var Data GetMsgData
+	err = json.Unmarshal(res.Data, &Data)
+	if err != nil {
+		return GetMsgData{}, err
+	}
+	return Data, nil
 }
 
-// // NewOneBot11Adapter   新建适配器结构体
-// func NewOneBotAdapter(c adapter.Config) *Adapter {
-// 	return &Adapter{
-// 		WsUrl:   c.Onebots.WsURL,
-// 		httpURL: c.Onebots.HttpURL,
-// 		token:   c.Onebots.Token,
-// 		echo:    make(map[string]chan adapter.Response),
-// 	}
-// }
+// GetForwardMsg get_forward_msg
+func (a *Adapter) GetForwardMsg(iD string) (GetForwardMsgData, error) {
+	params := map[string]interface{}{
+		"message_id": iD,
+	}
+	res, err := a.CallAction("get_forward_msg", params)
+	if err != nil {
+		return GetForwardMsgData{}, err
+	}
+	var Data GetForwardMsgData
+	err = json.Unmarshal(res.Data, &Data)
+	return Data, nil
+
+}
 
 // Connect 连接ws
 func (a *Adapter) Connect() error {
@@ -191,7 +200,7 @@ func (a *Adapter) Disconnect() error {
 func (a *Adapter) ReadMessage() (interface{}, error) {
 	for {
 		_, message, err := a.Conn.ReadMessage()
-		fmt.Println(string(message))
+		log.Println(string(message))
 		if err != nil {
 			log.Println("获取消息失败")
 		}

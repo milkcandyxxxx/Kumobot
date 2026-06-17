@@ -8,7 +8,6 @@ package bot
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
-	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
 	"strings"
 )
 
@@ -40,7 +39,10 @@ func (b *Bot) OnEvent(module func(event *adapter.Event)) {
 }
 
 func (b *Bot) Execute() {
-	b.adapter.Connect()
+	err := b.adapter.Connect()
+	if err != nil {
+		return
+	}
 
 	for {
 		msg, _ := b.adapter.ReadMessage()
@@ -74,9 +76,9 @@ func (b *Bot) SetAdapter(a adapter.Adapter) {
 // 	return b.adapter.DeleteMessage(messageId)
 // }
 
-func (b *Bot) CallAction(action string, params map[string]string) (adapter.Response, error) {
-	return b.adapter.(*onebot11.Adapter).CallAction(action, params)
-}
+// func (b *Bot) CallAction(action string, params map[string]string) (adapter.Response, error) {
+// 	return b.adapter.(*onebot11.Adapter).CallAction(action, params)
+// }
 
 // 暂时用于消息推送的解决方案
 var Webhook *Bot
