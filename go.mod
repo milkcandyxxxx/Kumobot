@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/gorilla/websocket v1.5.3
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/spf13/viper v1.21.0
 )
 

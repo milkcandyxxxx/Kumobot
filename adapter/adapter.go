@@ -27,18 +27,20 @@ type Adapter interface {
 // NewOneBot11Adapter   新建适配器结构体
 func NewAdapter(c Config) *AdapterInfo {
 	return &AdapterInfo{
-		WsUrl:   c.Onebots.WsURL,
-		HttpURL: c.Onebots.HttpURL,
-		Token:   c.Onebots.Token,
-		Echo:    make(map[string]chan Response),
+		WsUrl:        c.Onebots.WsURL,
+		HttpURL:      c.Onebots.HttpURL,
+		Token:        c.Onebots.Token,
+		Echo:         make(map[string]chan Response),
+		ProtocolName: "ON11",
 	}
 }
 
 type AdapterInfo struct {
-	WsUrl   string
-	HttpURL string
-	Conn    *websocket.Conn
-	Token   string
-	Mu      sync.RWMutex
-	Echo    map[string]chan Response
+	WsUrl        string
+	HttpURL      string
+	Conn         *websocket.Conn
+	Token        string
+	Mu           sync.RWMutex
+	Echo         map[string]chan Response
+	ProtocolName string
 }

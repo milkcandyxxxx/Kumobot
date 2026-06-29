@@ -50,6 +50,16 @@ func OnRegex(regex string, h Handler) {
 	})
 }
 
+// ++++++++++++++++++++++++定时任务++++++++++++++++++++++++
+// OnCron 定时任务注册（6位cron表达式：秒 分 时 日 月 周）
+func OnCron(spec string, h Handler) {
+	addMatcher(Matcher{
+		Type:    "cron",
+		Pattern: spec,
+		Handler: h,
+	})
+}
+
 // ++++++++++++++++++++++++插件管理++++++++++++++++++++++++
 
 // OnPlugin 注册插件
@@ -76,7 +86,7 @@ func OnPlugin(info ...string) {
 // ++++++++++++++++++++++++信息发送++++++++++++++++++++++++
 
 // // SendPrivateMessage 发送私聊信息
-// func (c *Ctx) SendPrivateMessage(userID string, msg string) (adapter.CommonResponse, error) {
+// func (c *Ctx) SendPrivateMessage(userID string, msg string) (Adapter.CommonResponse, error) {
 //
 // 	return c.ON11.SendPrivateMessage(userID, msg)
 // }
@@ -98,8 +108,8 @@ func OnPlugin(info ...string) {
 // ++++++++++++++++++++++++信息获取++++++++++++++++++++++++
 
 // // GetUserInfo 获取用户信息
-// func (c *Ctx) GetUserInfo(userID string) (adapter.UserInfo, error) {
-// 	return c.Bot.adapter.GetUserInfo(userID)
+// func (c *Ctx) GetUserInfo(userID string) (Adapter.UserInfo, error) {
+// 	return c.Bot.Adapter.GetUserInfo(userID)
 // }
 
 // LoginInfo 自身信息
@@ -110,7 +120,7 @@ type LoginInfo struct {
 
 // // 修改函数签名，返回具名结构体
 // func (c *Ctx) GetLoginInfo() (LoginInfo, error) {
-// 	a, _ := c.Bot.adapter.CallAction("get_login_info", nil)
+// 	a, _ := c.Bot.Adapter.CallAction("get_login_info", nil)
 // 	var data LoginInfo
 // 	err := json.Unmarshal(a.Data, &data)
 // 	if err != nil {

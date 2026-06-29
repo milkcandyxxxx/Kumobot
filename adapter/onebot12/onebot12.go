@@ -18,6 +18,11 @@ type Adapter struct {
 	conn    *websocket.Conn
 }
 
+func (a *Adapter) GetProtocolName() string {
+	// TODO implement me
+	panic("implement me")
+}
+
 // NewOneBotAdapter  新建适配器结构体
 func NewOneBotAdapter(wsUrl string, httpUrl string) *Adapter {
 	return &Adapter{

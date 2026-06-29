@@ -18,12 +18,12 @@ type ON11 struct {
 }
 
 // // SendGroupMessage  发送群里信息
-// func (o *ON11) SendGroupMessagea(groupID string, msg string) (int32, error) {
+// func (o *ON11) SendGroupMessagea(groupID string, msg string) (int64, error) {
 // 	return o.SendGroupMessage(groupID, msg)
 // }
 
 // SendGroupMessageAt  发送群聊信息，并at回复
-func (o *ON11) SendGroupMessageAt(groupID string, msg string) (int32, error) {
+func (o *ON11) SendGroupMessageAt(groupID string, msg string) (int64, error) {
 	// 构造at消息段
 	UserID, _ := strconv.ParseInt(o.Event.UserID, 10, 64)
 	msgAt := []map[string]interface{}{
@@ -44,9 +44,10 @@ func (o *ON11) SendGroupMessageAt(groupID string, msg string) (int32, error) {
 }
 
 // Send 一键发送默认为回复（在哪触发的哪里回复，默认at）
-func (o *ON11) Send(msg string) (int32, error) {
+func (o *ON11) Send(msg string) (int64, error) {
 	if o.Event.DetailType == "private" {
-		return o.SendPrivateMessage(o.Event.UserID, msg)
+		id, _ := strconv.ParseInt(o.Event.UserID, 10, 64)
+		return o.SendPrivateMessage(id, msg)
 	}
 	if o.Event.DetailType == "channel" || o.Event.DetailType == "group" {
 		return o.SendGroupMessageAt(o.Event.GroupID, msg)
