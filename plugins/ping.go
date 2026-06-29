@@ -9,13 +9,12 @@ package plugins
 import (
 	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/bot"
+	"github.com/milkcandyxxxx/Kumobot/bot/rule"
 )
 
 func init() {
 	bot.OnPlugin("ping", "无", "milk", "无", "2", "false")
-	bot.OnCommand("ping", func(ctx *bot.Ctx) {
-		info, _ := ctx.ON11.GetLoginInfo()
-		ctx.ON11.Send(fmt.Sprintf("%+v", info))
-	})
-
+	bot.OnMessage(func(ctx *bot.Ctx) {
+		ctx.ON11.Send(fmt.Sprintf("%+v", 111))
+	}, bot.Group("602297234"), rule.User())
 }

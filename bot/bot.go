@@ -22,6 +22,7 @@ type Bot struct {
 	Event         *adapter.Event
 	cronScheduler *cron.Cron // 定时任务
 }
+type Rule func(ctx *Ctx) bool
 
 // GetUserInfo
 // func (b *Bot) GetUserInfo() (core.UserInfo, error) {

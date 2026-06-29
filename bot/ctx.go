@@ -8,6 +8,7 @@
 package bot
 
 import (
+	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"strconv"
 	"strings"
@@ -19,8 +20,9 @@ import (
 //		return c.bot.GetUserInfo()
 //	}
 type Ctx struct {
-	Bot  *Bot
-	ON11 *ON11.ON11
+	Bot   *Bot
+	ON11  *ON11.ON11
+	Event *adapter.Event
 }
 
 // ExtractPlainText 用于获取第一个参数
@@ -37,6 +39,13 @@ func OnCommand(cmd string, h Handler) {
 		Pattern: cmd,
 		// Priority:  0,
 		// Exclusive: false,
+		Handler: h,
+	})
+}
+func OnMessage(h Handler, rules ...Rule) {
+	addMatcher(Matcher{
+		Type:    "rule",
+		Rules:   rules,
 		Handler: h,
 	})
 }
