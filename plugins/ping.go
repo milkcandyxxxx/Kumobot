@@ -16,5 +16,6 @@ func init() {
 	bot.OnPlugin("ping", "无", "milk", "无", "2", "false")
 	bot.OnMessage(func(ctx *bot.Ctx) {
 		ctx.ON11.Send(fmt.Sprintf("%+v", 111))
-	}, bot.Group("602297234"), rule.User())
+
+	}, rule.Group("602297234"), rule.OnCommand("ping"))
 }

@@ -15,12 +15,13 @@ import (
 
 // Bot bot适配器
 type Bot struct {
-	Config        *adapter.Config // 机器人配置
-	Adapter       adapter.Adapter // 适配器选择
-	Prefix        string
-	Module        []func(event *adapter.Event)
-	Event         *adapter.Event
-	cronScheduler *cron.Cron // 定时任务
+	Config         *adapter.Config // 机器人配置
+	Adapter        adapter.Adapter // 适配器选择
+	Prefix         string
+	Module         []func(event *adapter.Event)
+	Event          *adapter.Event
+	cronScheduler  *cron.Cron // 定时任务
+	MessageChannel chan *adapter.Event
 }
 type Rule func(ctx *Ctx) bool
 
@@ -32,8 +33,9 @@ type Rule func(ctx *Ctx) bool
 // NewBot 新建bot
 func NewBot(config *adapter.Config, prefix string) *Bot {
 	return &Bot{
-		Config: config,
-		Prefix: prefix,
+		Config:         config,
+		Prefix:         prefix,
+		MessageChannel: make(chan *adapter.Event, 100),
 	}
 }
 
@@ -44,18 +46,9 @@ func (b *Bot) OnEvent(module func(event *adapter.Event)) {
 
 // Execute 启动bot
 func (b *Bot) Execute() {
-	err := b.Adapter.Connect()
-	if err != nil {
-		return
-	}
 
 	for {
-		msg, _ := b.Adapter.ReadMessage()
-		event, ok := msg.(*adapter.Event)
-
-		if !ok {
-			continue
-		}
+		event := <-b.MessageChannel
 		if event.Type == "message" {
 
 			if !strings.HasPrefix(event.AltMessage, b.Prefix) {
@@ -69,6 +62,11 @@ func (b *Bot) Execute() {
 	}
 }
 func (b *Bot) Runbot() {
+	err := b.Adapter.Connect()
+	if err != nil {
+		return
+	}
+	go b.Adapter.ReadMessage(b.MessageChannel)
 	go b.Execute()
 	b.StartCron()
 }

@@ -49,7 +49,7 @@ func (a *Adapter) Disconnect() error {
 }
 
 // ReadMessage 读取信息
-func (a *Adapter) ReadMessage() (interface{}, error) {
+func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 	for {
 		_, message, err := a.Conn.ReadMessage()
 		log.Println(string(message))
@@ -61,7 +61,6 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 		err = json.Unmarshal(message, &check)
 		if err != nil {
 			log.Println("解析消息失败", err)
-			continue
 		}
 		if _, exists := check["self_id"]; exists {
 			// 看事件类型
@@ -69,7 +68,7 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 			err = json.Unmarshal(message, &oneBotEvent)
 			if err != nil {
 				log.Println("解析消息失败")
-				return nil, err
+				continue
 			}
 			// 为消息
 			if oneBotEvent.PostType == "message" {
@@ -79,7 +78,7 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 				err = json.Unmarshal(message, &oB11BaseMessageEvent)
 				if err != nil {
 					log.Println("解析消息失败")
-					return nil, err
+					continue
 				}
 				// 为私聊
 				switch oB11BaseMessageEvent.MessageType {
@@ -88,13 +87,15 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 					err = json.Unmarshal(message, &oB11PrivateMessageEvent)
 					event := oB11PrivateMessageEvent.ToAdapterEvent()
 					fmt.Println(event)
-					return event, nil
+					ch <- event
+					continue
 				case "group":
 					var oB11GroupMessageEvent OB11GroupMessageEvent
 					err = json.Unmarshal(message, &oB11GroupMessageEvent)
 					event := oB11GroupMessageEvent.ToAdapterEvent()
 					fmt.Println(event)
-					return event, nil
+					ch <- event
+					continue
 				}
 
 			}
@@ -107,10 +108,12 @@ func (a *Adapter) ReadMessage() (interface{}, error) {
 			a.Mu.Unlock()
 			if ok {
 				ch <- res
-				return res, nil
+				continue
 			}
-			return res, nil
+			continue
+
 		}
+		continue
 	}
 }
 
@@ -119,6 +122,7 @@ type Adapter struct {
 	*adapter.AdapterInfo
 }
 
+// NewOneBotAdapter 新建适配器
 func NewOneBotAdapter(c adapter.Config) *Adapter {
 	return &Adapter{
 		AdapterInfo: adapter.NewAdapter(c),

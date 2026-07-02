@@ -15,7 +15,7 @@ type Adapter interface {
 	// // SendPrivateMessage 发送私人消息
 	// SendPrivateMessage(userID interface{}, msg string) error
 	// ReadMessage 读取消息
-	ReadMessage() (interface{}, error)
+	ReadMessage(chan *Event) error
 	// // SendGroupMessage 发送群组消息
 	// SendGroupMessage(groupID string, msg string, AtUserID string) error
 	// GetSelfInfo() (SelfInfo, error)
