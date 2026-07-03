@@ -7,6 +7,7 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"regexp"
@@ -14,9 +15,20 @@ import (
 	"strings"
 )
 
+func (b *Bot) AAAA(ctx *Ctx) {
+	GroupUserID := fmt.Sprintf("%s%s", ctx.Event.UserID, ctx.Event.GroupID)
+	b.ChatHistory[GroupUserID] = make(chan *adapter.Event)
+	ctx.Ch = b.ChatHistory[GroupUserID]
+}
+
 // Dispatch 插件模块调度器
 func (b *Bot) Dispatch(event *adapter.Event) {
-
+	fmt.Println(fmt.Sprintf("%s%s", event.UserID, event.GroupID))
+	aaa, ok := b.ChatHistory[fmt.Sprintf("%s%s", event.UserID, event.GroupID)]
+	if ok {
+		aaa <- event
+		return
+	}
 	if event.Type != "message" {
 		return
 	}
@@ -34,7 +46,13 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 	for _, p := range plugins {
 		for _, m := range p.Matcher {
 			if checkMatcher(ctx, m) {
-				go m.Handler(ctx)
+				if m.LifeCycle {
+					go b.AAAA(ctx)
+					go m.Handler(ctx)
+				} else {
+					go m.Handler(ctx)
+				}
+
 			}
 			// 默认为匹配
 			// matched := false

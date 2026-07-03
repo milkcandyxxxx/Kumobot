@@ -19,10 +19,12 @@ import (
 //	func (c *Ctx) GetUserInfo(id string) (core.UserInfo, error) {
 //		return c.bot.GetUserInfo()
 //	}
+
 type Ctx struct {
 	Bot   *Bot
 	ON11  *ON11.ON11
 	Event *adapter.Event
+	Ch    chan *adapter.Event
 }
 
 // ExtractPlainText 用于获取第一个参数
@@ -47,6 +49,14 @@ func OnMessage(h Handler, rules ...Rule) {
 		Type:    "rule",
 		Rules:   rules,
 		Handler: h,
+	})
+}
+func OnChat(h Handler, rules ...Rule) {
+	addMatcher(Matcher{
+		Type:      "rule",
+		Rules:     rules,
+		LifeCycle: true,
+		Handler:   h,
 	})
 }
 

@@ -17,5 +17,15 @@ func init() {
 	bot.OnMessage(func(ctx *bot.Ctx) {
 		ctx.ON11.Send(fmt.Sprintf("%+v", 111))
 
-	}, rule.Group("602297234"), rule.OnCommand("ping"))
+	}, rule.OnCommand("ping"))
+	bot.OnChat(func(ctx *bot.Ctx) {
+		ctx.ON11.Send(fmt.Sprintf("%+v", 111))
+		fmt.Printf("通道是%+v", ctx.Ch)
+		for {
+			aaa := <-ctx.Ch
+			fmt.Println("通道内得到的", aaa)
+			ctx.ON11.Send(aaa.AltMessage)
+		}
+
+	}, rule.OnCommand("aaa"))
 }

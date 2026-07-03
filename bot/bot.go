@@ -10,7 +10,6 @@ import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"github.com/robfig/cron/v3"
-	"strings"
 )
 
 // Bot bot适配器
@@ -20,8 +19,9 @@ type Bot struct {
 	Prefix         string
 	Module         []func(event *adapter.Event)
 	Event          *adapter.Event
-	cronScheduler  *cron.Cron // 定时任务
-	MessageChannel chan *adapter.Event
+	cronScheduler  *cron.Cron          // 定时任务
+	MessageChannel chan *adapter.Event // 读取消息的通道
+	ChatHistory    map[string]chan *adapter.Event
 }
 type Rule func(ctx *Ctx) bool
 
@@ -36,6 +36,7 @@ func NewBot(config *adapter.Config, prefix string) *Bot {
 		Config:         config,
 		Prefix:         prefix,
 		MessageChannel: make(chan *adapter.Event, 100),
+		ChatHistory:    make(map[string]chan *adapter.Event),
 	}
 }
 
@@ -50,11 +51,6 @@ func (b *Bot) Execute() {
 	for {
 		event := <-b.MessageChannel
 		if event.Type == "message" {
-
-			if !strings.HasPrefix(event.AltMessage, b.Prefix) {
-				continue
-			}
-			event.AltMessage = event.AltMessage[len(b.Prefix):]
 			for _, h := range b.Module {
 				h(event)
 			}
