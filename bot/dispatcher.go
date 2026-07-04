@@ -15,7 +15,9 @@ import (
 	"strings"
 )
 
-func (b *Bot) AAAA(ctx *Ctx) {
+// CreateChathistoryChannel 创建多轮会话通道
+func (b *Bot) CreateChathistoryChannel(ctx *Ctx) {
+	// 以用户id+群组id作为字典
 	GroupUserID := fmt.Sprintf("%s%s", ctx.Event.UserID, ctx.Event.GroupID)
 	b.ChatHistory[GroupUserID] = make(chan *adapter.Event)
 	ctx.Ch = b.ChatHistory[GroupUserID]
@@ -23,66 +25,53 @@ func (b *Bot) AAAA(ctx *Ctx) {
 
 // Dispatch 插件模块调度器
 func (b *Bot) Dispatch(event *adapter.Event) {
-	fmt.Println(fmt.Sprintf("%s%s", event.UserID, event.GroupID))
-	aaa, ok := b.ChatHistory[fmt.Sprintf("%s%s", event.UserID, event.GroupID)]
+	// 尝试取值，看有没有多轮会话在等待
+	ChatHistory, ok := b.ChatHistory[fmt.Sprintf("%s%s", event.UserID, event.GroupID)]
+	// 将信息发送至指定通道
 	if ok {
-		aaa <- event
-		return
-	}
-	if event.Type != "message" {
+		ChatHistory <- event
 		return
 	}
 	ctx := &Ctx{}
+	// 枚举所有支持的协议类型
 	switch a := b.Adapter.(type) {
 	case *ON11.ON11:
 		a.Event = event
-		ctx = &Ctx{Bot: b, ON11: a, Event: event}
+		// 这里ctx中的ON11不能直接使用 a ，
+		// a中的event的地址类型，如果写入就会导致新消息到来时，
+		// 所有ctx的event都会变化，所以这里写入值而非地址
+		ctx = &Ctx{
+			Bot: b, ON11: &ON11.ON11{
+				Adapter: a.Adapter,
+				Event:   event,
+			}, Event: event,
+		}
 	}
 	mu.Lock()
 	defer mu.Unlock()
+	// 按照优先级排序
 	sort.Slice(plugins, func(i, j int) bool {
 		return plugins[i].Priority > plugins[j].Priority
 	})
+	// 遍历插件
 	for _, p := range plugins {
+		// 遍历插件规则
 		for _, m := range p.Matcher {
 			if checkMatcher(ctx, m) {
 				if m.LifeCycle {
-					go b.AAAA(ctx)
+					b.CreateChathistoryChannel(ctx)
 					go m.Handler(ctx)
 				} else {
 					go m.Handler(ctx)
 				}
-
 			}
-			// 默认为匹配
-			// matched := false
-			// // 依据类型判断是否匹配
-			// switch m.Type {
-			// // 以什么什么开头
-			// case "startswith":
-			// 	matched = strings.HasPrefix(m.Pattern, event.GetMessageText())
-			// // 指令
-			// case "cmd":
-			// 	matched = isCmd(m.Pattern, event.GetMessageText())
-			// // 正则
-			// case "regex":
-			// 	matched = isRegex(m.Pattern, event.GetMessageText())
-			// // 以什么什么结尾
-			// case "endswith":
-			// 	matched = strings.HasSuffix(m.Pattern, event.GetMessageText())
-			// }
-			// // 匹配则执行
-			// if matched {
-			// 	go m.Handler(ctx)
-			// }
-			// // 判断是否独家（向下传递）
-			// if p.Exclusive {
-			// 	return
-			// }
+		}
+		if p.Exclusive {
+			return
 		}
 	}
 }
-func checkMatcher(ctx *Ctx, matcher Matcher) bool {
+func checkMatcher(ctx *Ctx, matcher Responder) bool {
 	for _, rule := range matcher.Rules {
 		if !rule(ctx) {
 			return false

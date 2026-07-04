@@ -19,7 +19,7 @@ type Plugin struct {
 	Help      string
 	Priority  int  // 优先级，1-10越小越优先
 	Exclusive bool // 是否独家（不允许其他插件再次触发）
-	Matcher   []Matcher
+	Matcher   []Responder
 	Whitelist [][]string
 }
 

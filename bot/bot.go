@@ -33,14 +33,13 @@ type Rule func(ctx *Ctx) bool
 // NewBot 新建bot
 func NewBot(config *adapter.Config, prefix string) *Bot {
 	return &Bot{
-		Config:         config,
-		Prefix:         prefix,
-		MessageChannel: make(chan *adapter.Event, 100),
-		ChatHistory:    make(map[string]chan *adapter.Event),
+		Config:         config,                         // 配置文件
+		Prefix:         prefix,                         // 已废弃，原用于全局触发提示词
+		MessageChannel: make(chan *adapter.Event, 100), // 消息通道，所有消息都先放进该通道内
 	}
 }
 
-// OnEvent 注册事件监听函数
+// OnEvent 注册模块，目前仅有插件模块，后续可能会考虑弃用
 func (b *Bot) OnEvent(module func(event *adapter.Event)) {
 	b.Module = append(b.Module, module)
 }
@@ -49,22 +48,24 @@ func (b *Bot) OnEvent(module func(event *adapter.Event)) {
 func (b *Bot) Execute() {
 
 	for {
-		event := <-b.MessageChannel
-		if event.Type == "message" {
+		event := <-b.MessageChannel  // 循环接取信息
+		if event.Type == "message" { // 是消息类型则传入模块（目前仅有插件模块）
 			for _, h := range b.Module {
 				h(event)
 			}
 		}
 	}
 }
+
+// Runbot 启动bot
 func (b *Bot) Runbot() {
 	err := b.Adapter.Connect()
 	if err != nil {
 		return
 	}
-	go b.Adapter.ReadMessage(b.MessageChannel)
+	go b.Adapter.ReadMessage(b.MessageChannel) // 两个协程同时进行消息读取于接收
 	go b.Execute()
-	b.StartCron()
+	b.StartCron() // 注册定时任务
 }
 
 // SetAdapter 设置适配器

@@ -36,7 +36,7 @@ func (b *Bot) ExtractPlainText() string {
 
 // OnCommand 单匹配
 func OnCommand(cmd string, h Handler) {
-	addMatcher(Matcher{
+	addMatcher(Responder{
 		Type:    "cmd",
 		Pattern: cmd,
 		// Priority:  0,
@@ -45,14 +45,14 @@ func OnCommand(cmd string, h Handler) {
 	})
 }
 func OnMessage(h Handler, rules ...Rule) {
-	addMatcher(Matcher{
+	addMatcher(Responder{
 		Type:    "rule",
 		Rules:   rules,
 		Handler: h,
 	})
 }
 func OnChat(h Handler, rules ...Rule) {
-	addMatcher(Matcher{
+	addMatcher(Responder{
 		Type:      "rule",
 		Rules:     rules,
 		LifeCycle: true,
@@ -62,7 +62,7 @@ func OnChat(h Handler, rules ...Rule) {
 
 // OnRegex 正则匹配
 func OnRegex(regex string, h Handler) {
-	addMatcher(Matcher{
+	addMatcher(Responder{
 		Type:    "regex",
 		Pattern: regex,
 		Handler: h,
@@ -72,7 +72,7 @@ func OnRegex(regex string, h Handler) {
 // ++++++++++++++++++++++++定时任务++++++++++++++++++++++++
 // OnCron 定时任务注册（6位cron表达式：秒 分 时 日 月 周）
 func OnCron(spec string, h Handler) {
-	addMatcher(Matcher{
+	addMatcher(Responder{
 		Type:    "cron",
 		Pattern: spec,
 		Handler: h,

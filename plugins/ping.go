@@ -10,6 +10,9 @@ import (
 	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/bot"
 	"github.com/milkcandyxxxx/Kumobot/bot/rule"
+	"math/rand"
+	"strconv"
+	"time"
 )
 
 func init() {
@@ -19,13 +22,20 @@ func init() {
 
 	}, rule.OnCommand("ping"))
 	bot.OnChat(func(ctx *bot.Ctx) {
-		ctx.ON11.Send(fmt.Sprintf("%+v", 111))
-		fmt.Printf("通道是%+v", ctx.Ch)
+		rand.Seed(time.Now().UnixNano())
+		a := rand.Intn(10)
 		for {
-			aaa := <-ctx.Ch
-			fmt.Println("通道内得到的", aaa)
-			ctx.ON11.Send(aaa.AltMessage)
+			ctx.ON11.Send(fmt.Sprintf("%s", "输入数字"))
+			b := <-ctx.Ch
+			num, _ := strconv.Atoi(b.AltMessage)
+			if a > num {
+				ctx.ON11.Send("太小了")
+			} else if a < num {
+				ctx.ON11.Send("太大了")
+			} else if a == num {
+				ctx.ON11.Send("猜对了")
+				return
+			}
 		}
-
 	}, rule.OnCommand("aaa"))
 }

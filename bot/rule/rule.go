@@ -36,23 +36,38 @@ func AnyRule(rules ...bot.Rule) bot.Rule {
 		return false
 	}
 }
+
+// OnlyGroup 指定只能群组触发
 func OnlyGroup() bot.Rule {
 	return func(ctx *bot.Ctx) bool {
 		return ctx.Event.DetailType == "group"
 	}
 }
+
+// Group 指定什么群触发
 func Group(groupID string) bot.Rule {
 	return func(ctx *bot.Ctx) bool {
 		return ctx.Event.GroupID == groupID
 	}
 }
+
+// User 指定用户触发
 func User(userID string) bot.Rule {
 	return func(ctx *bot.Ctx) bool {
 		return ctx.Event.UserID == userID
 	}
 }
+
+// OnCommand 指定前置词触发
 func OnCommand(cmd string) bot.Rule {
 	return func(ctx *bot.Ctx) bool {
 		return strings.HasPrefix(ctx.Event.AltMessage, cmd)
 	}
 }
+
+// // OnAdmin 群组管理员触发.,目前不太好触发，因为公共字段没有进行判断的
+// func OnAdmin() bot.Rule {
+// 	return func(ctx *bot.Ctx) bool {
+// 		return ctx.Event
+// 	}
+// }
