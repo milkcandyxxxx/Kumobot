@@ -27,9 +27,9 @@ type Adapter interface {
 // NewOneBot11Adapter   新建适配器结构体
 func NewAdapter(c Config) *AdapterInfo {
 	return &AdapterInfo{
-		WsUrl:        c.Onebots.WsURL,
-		HttpURL:      c.Onebots.HttpURL,
-		Token:        c.Onebots.Token,
+		WsUrl:        c.Connect.WsURL,
+		HttpURL:      c.Connect.HttpURL,
+		Token:        c.Connect.Token,
 		Echo:         make(map[string]chan Response),
 		ProtocolName: "ON11",
 	}

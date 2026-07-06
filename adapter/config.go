@@ -6,12 +6,12 @@ import (
 
 // Config 配置文件总结构体
 type Config struct {
-	Onebots OnebotsConfig `mapstructure:"onebots"`
-	Bot     BotConfig     `mapstructure:"bot"`
+	Connect connectinfo `mapstructure:"connect"`
+	Bot     BotConfig   `mapstructure:"bot"`
 }
 
 // OnebotsConfig http及webst地址结构体
-type OnebotsConfig struct {
+type connectinfo struct {
 	WsURL   string `mapstructure:"ws_url"`
 	HttpURL string `mapstructure:"http_url"`
 	Token   string `mapstructure:"token"`
