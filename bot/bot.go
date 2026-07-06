@@ -33,10 +33,12 @@ type Rule func(ctx *Ctx) bool
 // NewBot 新建bot
 func NewBot(config *adapter.Config, prefix string) *Bot {
 	return &Bot{
-		Config:         config,                         // 配置文件
-		Prefix:         prefix,                         // 已废弃，原用于全局触发提示词
-		MessageChannel: make(chan *adapter.Event, 100), // 消息通道，所有消息都先放进该通道内
+		Config:         config,                               // 配置文件
+		Prefix:         prefix,                               // 已废弃，原用于全局触发提示词
+		ChatHistory:    make(map[string]chan *adapter.Event), // 初始化
+		MessageChannel: make(chan *adapter.Event, 100),       // 消息通道，所有消息都先放进该通道内
 	}
+
 }
 
 // OnEvent 注册模块，目前仅有插件模块，后续可能会考虑弃用
