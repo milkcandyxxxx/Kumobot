@@ -4,7 +4,7 @@
   - @date 2026/4/13
   - @description TODO
 */
-package plugins
+package ping
 
 import (
 	"fmt"
@@ -37,5 +37,5 @@ func init() {
 				return
 			}
 		}
-	}, rule.OnCommand("aaa"))
+	}, rule.OnCommand("aaa"), rule.Group("602297234"))
 }
