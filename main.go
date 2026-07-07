@@ -4,9 +4,8 @@ package main
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
-	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
-
 	"github.com/milkcandyxxxx/Kumobot/bot"
+	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	_ "github.com/milkcandyxxxx/Kumobot/plugins"
 	"log"
 )
@@ -32,4 +31,3 @@ func main() {
 
 	select {}
 }
-
