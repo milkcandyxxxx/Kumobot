@@ -73,7 +73,7 @@ func main() {
 	firstPath := filepath.Join(Infos.Name, "plugins")
 	os.MkdirAll(firstPath, 0777)
 	createFile("plugins", firstPath, "go")
-	secondPath := filepath.Join(firstPath, "plugins")
+	secondPath := filepath.Join(firstPath, "ping")
 	os.MkdirAll(secondPath, 0777)
 	createFile("ping", secondPath, "go")
 	fmt.Println("创建完毕")
