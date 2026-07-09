@@ -1,5 +1,7 @@
 # Kumobot
 
+![https://img.shields.io/badge/OneBot-11-black](https://img.shields.io/badge/OneBot-11-black)
+
 ## 起源
 
 long long ago，一位传奇的少女...；好的不扯了。奶糖第一次解出的机器人是[Yunzai-Bot](https://github.com/yoimiya-kokomi/miao-plugin)，中文名是云崽（一开始是专注于原神的相关功能，后续逐步扩展业务）。Kumo在日语中有云的意思。所以直译过来是云机器人，不过我更想称之为“云宝”。
