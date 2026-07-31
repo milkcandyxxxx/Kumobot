@@ -8,6 +8,7 @@ package rule
 
 import (
 	"github.com/milkcandyxxxx/Kumobot/bot"
+	"regexp"
 	"strings"
 )
 
@@ -71,3 +72,15 @@ func OnCommand(cmd string) bot.Rule {
 // 		return ctx.Event
 // 	}
 // }
+
+func OnRegex(regex string) bot.Rule {
+	match, err := regexp.Compile(regex)
+	if err != nil {
+		return func(ctx *bot.Ctx) bool {
+			return false
+		}
+	}
+	return func(ctx *bot.Ctx) bool {
+		return match.MatchString(ctx.Event.AltMessage)
+	}
+}

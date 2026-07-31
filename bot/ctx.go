@@ -10,8 +10,6 @@ package bot
 import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
-	"strconv"
-	"strings"
 )
 
 // GetUserInfo 获取用户信息
@@ -21,85 +19,12 @@ import (
 //	}
 
 type Ctx struct {
-	Bot   *Bot
-	ON11  *ON11.ON11
-	Event *adapter.Event
-	Ch    chan *adapter.Event
-}
-
-// ExtractPlainText 用于获取第一个参数
-func (b *Bot) ExtractPlainText() string {
-	return strings.SplitN(b.Event.GetMessageText(), " ", 2)[1]
-}
-
-// ++++++++++++++++++++++++匹配机制++++++++++++++++++++++++
-
-// OnCommand 单匹配
-func OnCommand(cmd string, h Handler) {
-	addMatcher(Responder{
-		Type:    "cmd",
-		Pattern: cmd,
-		// Priority:  0,
-		// Exclusive: false,
-		Handler: h,
-	})
-}
-func OnMessage(h Handler, rules ...Rule) {
-	addMatcher(Responder{
-		Type:    "rule",
-		Rules:   rules,
-		Handler: h,
-	})
-}
-func OnChat(h Handler, rules ...Rule) {
-	addMatcher(Responder{
-		Type:      "rule",
-		Rules:     rules,
-		LifeCycle: true,
-		Handler:   h,
-	})
-}
-
-// OnRegex 正则匹配
-func OnRegex(regex string, h Handler) {
-	addMatcher(Responder{
-		Type:    "regex",
-		Pattern: regex,
-		Handler: h,
-	})
-}
-
-// ++++++++++++++++++++++++定时任务++++++++++++++++++++++++
-// OnCron 定时任务注册（6位cron表达式：秒 分 时 日 月 周）
-func OnCron(spec string, h Handler) {
-	addMatcher(Responder{
-		Type:    "cron",
-		Pattern: spec,
-		Handler: h,
-	})
-}
-
-// ++++++++++++++++++++++++插件管理++++++++++++++++++++++++
-
-// OnPlugin 注册插件
-func OnPlugin(info ...string) {
-	thisPlugin := &Plugin{
-		Name:      "无",
-		Version:   "无",
-		Author:    "佚名",
-		Help:      "无",
-		Priority:  0,
-		Exclusive: false,
-	}
-	thisPlugin.Name = info[0]
-	thisPlugin.Help = info[3]
-	thisPlugin.Version = info[1]
-	thisPlugin.Author = info[2]
-	priority, _ := strconv.Atoi(info[4])
-	exclusive, _ := strconv.ParseBool(info[5])
-	thisPlugin.Priority = priority
-	thisPlugin.Exclusive = exclusive
-	addPlugin(thisPlugin)
+	Bot         *Bot
+	ON11        *ON11.ON11
+	Event       *adapter.Event
+	Ch          chan *adapter.Event
+	ChatHistory map[string]chan *adapter.Event
+	Plugin      *PluginInfo
 }
 
 // ++++++++++++++++++++++++信息发送++++++++++++++++++++++++
@@ -130,13 +55,6 @@ func OnPlugin(info ...string) {
 // func (c *Ctx) GetUserInfo(userID string) (Adapter.UserInfo, error) {
 // 	return c.Bot.Adapter.GetUserInfo(userID)
 // }
-
-// LoginInfo 自身信息
-type LoginInfo struct {
-	UserID   int64  `json:"user_id"`
-	Nickname string `json:"nickname"`
-}
-
 // // 修改函数签名，返回具名结构体
 // func (c *Ctx) GetLoginInfo() (LoginInfo, error) {
 // 	a, _ := c.Bot.Adapter.CallAction("get_login_info", nil)

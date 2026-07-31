@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -21,10 +20,14 @@ func (b *Bot) CreateChathistoryChannel(ctx *Ctx) {
 	GroupUserID := fmt.Sprintf("%s%s", ctx.Event.UserID, ctx.Event.GroupID)
 	b.ChatHistory[GroupUserID] = make(chan *adapter.Event)
 	ctx.Ch = b.ChatHistory[GroupUserID]
+	ctx.ChatHistory = b.ChatHistory
+	fmt.Println("刚赋值的ctx", ctx.ChatHistory)
+	fmt.Println(ctx.Ch, "xxxxxxxxxxxxx已经创建")
 }
 
 // Dispatch 插件模块调度器
 func (b *Bot) Dispatch(event *adapter.Event) {
+	fmt.Println("bot中的字典", b.ChatHistory)
 	// 尝试取值，看有没有多轮会话在等待
 	ChatHistory, ok := b.ChatHistory[fmt.Sprintf("%s%s", event.UserID, event.GroupID)]
 	// 将信息发送至指定通道
@@ -50,19 +53,19 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 	mu.Lock()
 	defer mu.Unlock()
 	// 按照优先级排序
-	sort.Slice(plugins, func(i, j int) bool {
-		return plugins[i].Priority > plugins[j].Priority
+	sort.Slice(b.plugins, func(i, j int) bool {
+		return b.plugins[i].Priority > b.plugins[j].Priority
 	})
 	// 遍历插件
-	for _, p := range plugins {
+	for _, p := range b.plugins {
 		// 遍历插件规则
-		for _, m := range p.Matcher {
+		for _, m := range p.Respond {
 			if checkMatcher(ctx, m) {
 				if m.LifeCycle {
 					b.CreateChathistoryChannel(ctx)
-					go m.Handler(ctx)
+					go m.HandlerFlow(ctx)
 				} else {
-					go m.Handler(ctx)
+					go m.HandlerFlow(ctx)
 				}
 			}
 		}
@@ -71,7 +74,7 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 		}
 	}
 }
-func checkMatcher(ctx *Ctx, matcher Responder) bool {
+func checkMatcher(ctx *Ctx, matcher *Responder) bool {
 	for _, rule := range matcher.Rules {
 		if !rule(ctx) {
 			return false
@@ -84,11 +87,4 @@ func checkMatcher(ctx *Ctx, matcher Responder) bool {
 func isCmd(cmd string, msg string) bool {
 
 	return strings.HasPrefix(msg, cmd)
-}
-func isRegex(regex string, msg string) bool {
-	match, err := regexp.Compile(regex)
-	if err != nil {
-		return false
-	}
-	return match.MatchString(msg)
 }

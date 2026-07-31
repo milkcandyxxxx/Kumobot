@@ -10,6 +10,7 @@ import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"github.com/robfig/cron/v3"
+	"sync"
 )
 
 // Bot bot适配器
@@ -22,6 +23,9 @@ type Bot struct {
 	cronScheduler  *cron.Cron          // 定时任务
 	MessageChannel chan *adapter.Event // 读取消息的通道
 	ChatHistory    map[string]chan *adapter.Event
+	plugins        []*PluginInfo
+	runningPlugin  *PluginInfo
+	mu             sync.RWMutex
 }
 type Rule func(ctx *Ctx) bool
 
@@ -46,7 +50,7 @@ func (b *Bot) OnEvent(module func(event *adapter.Event)) {
 	b.Module = append(b.Module, module)
 }
 
-// Execute 启动bot
+// Execute 启动接收消息
 func (b *Bot) Execute() {
 
 	for {
@@ -61,13 +65,13 @@ func (b *Bot) Execute() {
 
 // Runbot 启动bot
 func (b *Bot) Runbot() {
-	err := b.Adapter.Connect()
+	err := b.Adapter.Connect() // 先连接
 	if err != nil {
 		return
 	}
 	go b.Adapter.ReadMessage(b.MessageChannel) // 两个协程同时进行消息读取于接收
-	go b.Execute()
-	b.StartCron() // 注册定时任务
+	go b.Execute()                             // 接收信息
+	b.StartCron()                              // 注册定时任务
 }
 
 // SetAdapter 设置适配器
@@ -81,11 +85,13 @@ var Webhook *Bot
 func SetWebhook(b *Bot) {
 	Webhook = b
 }
+
+// StartCron 启动定时任务
 func (b *Bot) StartCron() {
 	b.cronScheduler = cron.New(cron.WithSeconds())
 	mu.RLock()
 	for _, p := range plugins {
-		for _, m := range p.Matcher {
+		for _, m := range p.Respond {
 			if m.Type != "cron" {
 				continue
 			}
@@ -102,4 +108,66 @@ func (b *Bot) StartCron() {
 	}
 	mu.RUnlock()
 	b.cronScheduler.Start()
+}
+
+// ++++++++++++++++++++++++匹配机制++++++++++++++++++++++++
+
+// OnMessage 注册单个功能
+func (b *Bot) OnMessage(h Handler) *Responder {
+	r := &Responder{
+		Type:        "Message",
+		Pattern:     "",
+		Rules:       nil,
+		ChatHistory: nil,
+		ChatWith:    "",
+		LifeCycle:   false,
+		GroupUserID: "",
+		Handler:     h,
+		Pre:         nil,
+		Post:        nil,
+	}
+	b.addRespond(r)
+	return r
+}
+
+// OnRule 注册规则
+func (r *Responder) OnRule(rule ...Rule) *Responder {
+	r.Rules = rule
+	return r
+}
+
+// OnChat 注册会话
+func (b *Bot) OnChat(h Handler, rules ...Rule) *Responder {
+	return &Responder{
+		Type:        "Chat",
+		Pattern:     "",
+		Rules:       nil,
+		ChatHistory: nil,
+		ChatWith:    "",
+		LifeCycle:   false,
+		GroupUserID: "",
+		Handler:     nil,
+		Pre:         nil,
+		Post:        nil,
+	}
+}
+
+// ++++++++++++++++++++++++定时任务++++++++++++++++++++++++
+// OnCron 定时任务注册（6位cron表达式：秒 分 时 日 月 周）
+// func (b *Bot) OnCron(spec string, h Handler) {
+// 	b.addMatcher(Responder{
+// 		Type:    "cron",
+// 		Pattern: spec,
+// 		Handler: h,
+// 	})
+// }
+
+// OnPlugin 注册插件
+func (b *Bot) OnPlugin(p *PluginInfo) {
+	b.addPlugin(p)
+}
+
+// RegisterPlugin bot注册插件
+func (b *Bot) RegisterPlugin(p Plugin) {
+	p.Register(b)
 }

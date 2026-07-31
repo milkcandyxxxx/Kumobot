@@ -21,6 +21,10 @@ import (
 // ################################ 公共方法 #####################################
 // Connect 连接ws
 func (a *Adapter) Connect() error {
+	// 检测是ws还是http
+	if a.WsUrl == "" {
+		return nil
+	}
 	// 检测地址合法性
 	wslAddr, err := url.Parse(a.WsUrl)
 	if err != nil {
@@ -29,7 +33,7 @@ func (a *Adapter) Connect() error {
 		return err
 	}
 	header := http.Header{}
-	header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Token))
+	// header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Token))
 	conn, _, err := websocket.DefaultDialer.Dial(wslAddr.String(), header)
 	if err != nil {
 		log.Println("连接失败")
@@ -149,6 +153,10 @@ func (a *Adapter) CallAction(action string, params map[string]interface{}) (adap
 	}()
 	// 序列化
 	body, _ := json.Marshal(payload)
+	// if a.WsUrl == "" {
+	// 	req, err := http.NewRequest("POST", a.WsUrl, bytes.NewBuffer(body))
+	// }
+
 	err := a.Conn.WriteMessage(websocket.TextMessage, body)
 	if err != nil {
 		return adapter.Response{}, err
