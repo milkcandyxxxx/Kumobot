@@ -16,6 +16,7 @@ type Adapter interface {
 	// SendPrivateMessage(userID interface{}, msg string) error
 	// ReadMessage 读取消息
 	ReadMessage(chan *Event) error
+	// CheckHeartbeat(int64, time.Duration) 心跳检查
 	// // SendGroupMessage 发送群组消息
 	// SendGroupMessage(groupID string, msg string, AtUserID string) error
 	// GetSelfInfo() (SelfInfo, error)
@@ -25,13 +26,14 @@ type Adapter interface {
 }
 
 // NewOneBot11Adapter   新建适配器结构体
-func NewAdapter(c Config) *AdapterInfo {
+func NewAdapter(agreementName string) *AdapterInfo {
 	return &AdapterInfo{
-		WsUrl:        c.Connect.WsURL,
-		HttpURL:      c.Connect.HttpURL,
-		Token:        c.Connect.Token,
+		WsUrl: GlobalConfig.Agreement[agreementName].WebSocket.WsURL,
+		// HttpURL:      GlobalConfig.Agreement[agreementName].WsURL,
+		Token:        GlobalConfig.Agreement[agreementName].WebSocket.Token,
 		Echo:         make(map[string]chan Response),
 		ProtocolName: "ON11",
+		// HeartbeatTime: -1,心跳检查
 	}
 }
 
@@ -43,4 +45,5 @@ type AdapterInfo struct {
 	Mu           sync.RWMutex
 	Echo         map[string]chan Response
 	ProtocolName string
+	// HeartbeatTime int64 心跳检查
 }

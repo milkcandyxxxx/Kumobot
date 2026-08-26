@@ -7,25 +7,27 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
+	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"github.com/robfig/cron/v3"
+	"log"
 	"sync"
 )
 
 // Bot bot适配器
 type Bot struct {
-	Config         *adapter.Config // 机器人配置
-	Adapter        adapter.Adapter // 适配器选择
-	Prefix         string
-	Module         []func(event *adapter.Event)
-	Event          *adapter.Event
-	cronScheduler  *cron.Cron          // 定时任务
-	MessageChannel chan *adapter.Event // 读取消息的通道
-	ChatHistory    map[string]chan *adapter.Event
-	plugins        []*PluginInfo
-	runningPlugin  *PluginInfo
-	mu             sync.RWMutex
+	Config         *adapter.Config                // 机器人配置
+	Adapter        adapter.Adapter                // 适配器选择
+	Prefix         string                         // 全局命令前缀
+	Module         []func(event *adapter.Event)   // 模块列表
+	Event          *adapter.Event                 // 事件结构体
+	cronScheduler  *cron.Cron                     // 定时任务
+	MessageChannel chan *adapter.Event            // 读取消息的通道
+	ChatHistory    map[string]chan *adapter.Event // 消息历史
+	Plugins        []*PluginInfo                  // 插件列表
+	mu             sync.RWMutex                   // 写锁
 }
 type Rule func(ctx *Ctx) bool
 
@@ -35,14 +37,30 @@ type Rule func(ctx *Ctx) bool
 // }
 
 // NewBot 新建bot
-func NewBot(config *adapter.Config, prefix string) *Bot {
+func NewBot(config *adapter.Config) *Bot {
 	return &Bot{
 		Config:         config,                               // 配置文件
-		Prefix:         prefix,                               // 已废弃，原用于全局触发提示词
 		ChatHistory:    make(map[string]chan *adapter.Event), // 初始化
 		MessageChannel: make(chan *adapter.Event, 100),       // 消息通道，所有消息都先放进该通道内
 	}
 
+}
+
+// NewOneBotAdapter 新建适配器
+func (b *Bot) NewOneBotAdapter(c adapter.Config) adapter.Adapter {
+	info := adapter.NewAdapter("onebot11")
+	// 手动包一层 onebot11.Adapter
+	b.Adapter = &ON11.ON11{
+		Adapter: &onebot11.Adapter{
+			AdapterInfo: info,
+		},
+	}
+	fmt.Println(b.Adapter)
+	return &ON11.ON11{
+		Adapter: &onebot11.Adapter{
+			AdapterInfo: info,
+		},
+	}
 }
 
 // OnEvent 注册模块，目前仅有插件模块，后续可能会考虑弃用
@@ -71,7 +89,8 @@ func (b *Bot) Runbot() {
 	}
 	go b.Adapter.ReadMessage(b.MessageChannel) // 两个协程同时进行消息读取于接收
 	go b.Execute()                             // 接收信息
-	b.StartCron()                              // 注册定时任务
+	// go b.Adapter.CheckHeartbeat(15, 10*time.Second) 心跳检查
+	b.StartCron() // 注册定时任务
 }
 
 // SetAdapter 设置适配器
@@ -89,8 +108,7 @@ func SetWebhook(b *Bot) {
 // StartCron 启动定时任务
 func (b *Bot) StartCron() {
 	b.cronScheduler = cron.New(cron.WithSeconds())
-	mu.RLock()
-	for _, p := range plugins {
+	for _, p := range b.Plugins {
 		for _, m := range p.Respond {
 			if m.Type != "cron" {
 				continue
@@ -106,7 +124,6 @@ func (b *Bot) StartCron() {
 
 		}
 	}
-	mu.RUnlock()
 	b.cronScheduler.Start()
 }
 
@@ -126,18 +143,18 @@ func (b *Bot) OnMessage(h Handler) *Responder {
 		Pre:         nil,
 		Post:        nil,
 	}
-	b.addRespond(r)
 	return r
 }
 
 // OnRule 注册规则
 func (r *Responder) OnRule(rule ...Rule) *Responder {
 	r.Rules = rule
+	fmt.Println(r)
 	return r
 }
 
 // OnChat 注册会话
-func (b *Bot) OnChat(h Handler, rules ...Rule) *Responder {
+func (b *Bot) OnChat(h Handler) *Responder {
 	return &Responder{
 		Type:        "Chat",
 		Pattern:     "",
@@ -146,7 +163,7 @@ func (b *Bot) OnChat(h Handler, rules ...Rule) *Responder {
 		ChatWith:    "",
 		LifeCycle:   false,
 		GroupUserID: "",
-		Handler:     nil,
+		Handler:     h,
 		Pre:         nil,
 		Post:        nil,
 	}
@@ -163,8 +180,12 @@ func (b *Bot) OnChat(h Handler, rules ...Rule) *Responder {
 // }
 
 // OnPlugin 注册插件
-func (b *Bot) OnPlugin(p *PluginInfo) {
-	b.addPlugin(p)
+func (b *Bot) OnPlugin(p *PluginInfo) *PluginInfo {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.Plugins = append(b.Plugins, p)
+	log.Println("\n加载插件:", p.Name, "\n版本:", p.Version, "\n作者:", p.Author, "\n帮助:", p.Help, "\n优先级:", p.Priority, "\n独家:", p.Exclusive)
+	return p
 }
 
 // RegisterPlugin bot注册插件

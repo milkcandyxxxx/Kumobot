@@ -6,15 +6,18 @@ import (
 
 // Config 配置文件总结构体
 type Config struct {
-	Connect connectinfo `mapstructure:"connect"`
-	Bot     BotConfig   `mapstructure:"bot"`
+	Agreement map[string]AgreementInfo `mapstructure:"agreement"`
+	// Bot     BotConfig   `mapstructure:"bot"`
 }
 
 // OnebotsConfig http及webst地址结构体
-type connectinfo struct {
-	WsURL   string `mapstructure:"ws_url"`
-	HttpURL string `mapstructure:"http_url"`
-	Token   string `mapstructure:"token"`
+type AgreementInfo struct {
+	WebSocket WebSocket `mapstructure:"websocket"`
+}
+type WebSocket struct {
+	WsURL string `mapstructure:"ws_url"`
+	// HttpURL string `mapstructure:"http_url"`
+	Token string `mapstructure:"token"`
 }
 
 // BotConfig 机器人配置结构体

@@ -44,9 +44,9 @@ func (r *Responder) HandlerFlow(ctx *Ctx) {
 	}
 }
 
-// addRespond 添加匹配器，为每个插件添加不同和适配器
-func (b *Bot) addRespond(m *Responder) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	runningPlugin.Respond = append(runningPlugin.Respond, m)
-}
+// // addRespond 添加匹配器，为每个插件添加不同和适配器
+// func (b *Bot) addRespond(m *Responder) {
+// 	b.mu.Lock()
+// 	defer b.mu.Unlock()
+// 	runningPlugin.Respond = append(runningPlugin.Respond, m)
+// }

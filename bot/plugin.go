@@ -6,11 +6,6 @@
 
 package bot
 
-import (
-	"log"
-	"sync"
-)
-
 // PluginInfo 插件模块信息
 type PluginInfo struct {
 	Name      string
@@ -25,21 +20,18 @@ type Plugin interface {
 	Register(b *Bot)
 }
 
-// // Info 插件基础信息结构体
-// type Info struct {
-//
-// }
-var (
-	plugins       = []*PluginInfo{} // 存储所有的匹配器注册
-	runningPlugin *PluginInfo
-	mu            sync.RWMutex // 加锁（目前是冷加载插件，后续热加载等需要注意）
-)
-
-// addPlugin 添加插件
-func (b *Bot) addPlugin(p *PluginInfo) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.plugins = append(b.plugins, p)
-	runningPlugin = p
-	log.Println("\n加载插件:", p.Name, "\n版本:", p.Version, "\n作者:", p.Author, "\n帮助:", p.Help, "\n优先级:", p.Priority, "\n独家:", p.Exclusive)
+// OnMessage 为插件注册功能
+func (p *PluginInfo) OnMessage(h Handler) *Responder {
+	r := &Responder{Handler: h}
+	p.Respond = append(p.Respond, r)
+	return r
+}
+func (p *PluginInfo) OnChat(h Handler) *Responder {
+	r := &Responder{
+		Type:      "Chat",
+		Handler:   h,
+		LifeCycle: true,
+	}
+	p.Respond = append(p.Respond, r)
+	return r
 }

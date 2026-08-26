@@ -11,7 +11,6 @@ import (
 	"github.com/milkcandyxxxx/Kumobot/adapter"
 	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"sort"
-	"strings"
 )
 
 // CreateChathistoryChannel 创建多轮会话通道
@@ -50,14 +49,12 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 			}, Event: event,
 		}
 	}
-	mu.Lock()
-	defer mu.Unlock()
 	// 按照优先级排序
-	sort.Slice(b.plugins, func(i, j int) bool {
-		return b.plugins[i].Priority > b.plugins[j].Priority
+	sort.Slice(b.Plugins, func(i, j int) bool {
+		return b.Plugins[i].Priority > b.Plugins[j].Priority
 	})
 	// 遍历插件
-	for _, p := range b.plugins {
+	for _, p := range b.Plugins {
 		// 遍历插件规则
 		for _, m := range p.Respond {
 			if checkMatcher(ctx, m) {
@@ -81,10 +78,4 @@ func checkMatcher(ctx *Ctx, matcher *Responder) bool {
 		}
 	}
 	return true
-}
-
-// isCmd 类型的匹配规则
-func isCmd(cmd string, msg string) bool {
-
-	return strings.HasPrefix(msg, cmd)
 }

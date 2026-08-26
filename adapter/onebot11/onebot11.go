@@ -19,6 +19,12 @@ import (
 )
 
 // ################################ 公共方法 #####################################
+
+// Adapter OneBot11Adapter 适配器结构体
+type Adapter struct {
+	*adapter.AdapterInfo
+}
+
 // Connect 连接ws
 func (a *Adapter) Connect() error {
 	// 检测是ws还是http
@@ -33,13 +39,14 @@ func (a *Adapter) Connect() error {
 		return err
 	}
 	header := http.Header{}
-	// header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Token))
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Token))
 	conn, _, err := websocket.DefaultDialer.Dial(wslAddr.String(), header)
 	if err != nil {
 		log.Println("连接失败")
 		return err
 	}
 	a.Conn = conn
+	log.Println("ws连接成功")
 	return nil
 }
 
@@ -56,6 +63,11 @@ func (a *Adapter) Disconnect() error {
 func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 	for {
 		_, message, err := a.Conn.ReadMessage()
+		if err != nil {
+			log.Println(err, "ws连接出错，自动尝试重新连接")
+			a.Connect()
+
+		}
 		log.Println(string(message))
 		if err != nil {
 			log.Println("获取消息失败")
@@ -74,8 +86,10 @@ func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 				log.Println("解析消息失败")
 				continue
 			}
-			// 为消息
-			if oneBotEvent.PostType == "message" {
+			// 根据类型决策处置方法
+			switch oneBotEvent.PostType {
+			// 为消息，走插件流程
+			case "message":
 				var oneBotEvent OneBotEvent
 				err = json.Unmarshal(message, &oneBotEvent)
 				var oB11BaseMessageEvent OB11BaseMessageEvent
@@ -84,8 +98,9 @@ func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 					log.Println("解析消息失败")
 					continue
 				}
-				// 为私聊
+				// 判断消息类型
 				switch oB11BaseMessageEvent.MessageType {
+				// 为私聊
 				case "private":
 					var oB11PrivateMessageEvent OB11PrivateMessageEvent
 					err = json.Unmarshal(message, &oB11PrivateMessageEvent)
@@ -93,6 +108,7 @@ func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 					fmt.Println(event)
 					ch <- event
 					continue
+				// 为群组
 				case "group":
 					var oB11GroupMessageEvent OB11GroupMessageEvent
 					err = json.Unmarshal(message, &oB11GroupMessageEvent)
@@ -101,7 +117,9 @@ func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 					ch <- event
 					continue
 				}
-
+				// case "meta_event":
+				// 	atomic.StoreInt64(&a.HeartbeatTime, time.Now().Unix())
+				// 	continue
 			}
 
 		} else {
@@ -121,17 +139,22 @@ func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 	}
 }
 
-// Adapter OneBot11Adapter 适配器结构体
-type Adapter struct {
-	*adapter.AdapterInfo
-}
+// 原本想加，但是发现有点多余，先暂存
+// // CheckHeartbeat 心跳检查
+// func (a *Adapter) CheckHeartbeat(timeOut int64, checkFrequency time.Duration) {
+// 	ticker := time.NewTicker(checkFrequency)
+// 	defer ticker.Stop()
+// 	for range ticker.C {
+// 		heartTime := atomic.LoadInt64(&a.HeartbeatTime)
+// 		if time.Now().Unix()-heartTime > timeOut {
+// 			fmt.Println("超时")
+// 		} else {
+// 			fmt.Println("不超时")
+// 		}
+// 	}
+// }
 
-// NewOneBotAdapter 新建适配器
-func NewOneBotAdapter(c adapter.Config) *Adapter {
-	return &Adapter{
-		AdapterInfo: adapter.NewAdapter(c),
-	}
-}
+// #################################################私有方法##########################################
 
 // CallAction 执行特定方法用于处理某些协议特定的api
 func (a *Adapter) CallAction(action string, params map[string]interface{}) (adapter.Response, error) {
