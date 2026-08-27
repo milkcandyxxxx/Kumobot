@@ -20,12 +20,12 @@ type Responder struct {
 	Pattern     string                         // 匹配所需的关键词 如 / ! 等
 	Rules       []Rule                         // 规则
 	ChatHistory chan *adapter.Event            // 存放后续对话内容
-	ChatWith    string                         // 和谁在对话
 	LifeCycle   bool                           // 用于判断是只回复一次还是一场会话
 	GroupUserID string                         // 判断 是那条会话
 	Handler     Handler                        // 回调函数
 	Pre         []func(r *Responder, ctx *Ctx) // 前置函数
 	Post        []func(r *Responder, ctx *Ctx) // 后置函数
+	Timing      string                         // 定时任务的时间
 }
 
 // HandlerFlow 回调函数的执行流程，前置函数和后置函数

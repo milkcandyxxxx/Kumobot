@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
-	"io"
 	"log"
-	"net/http"
 	"net/url"
 )
 
@@ -181,18 +179,18 @@ func (a *Adapter) SendGroupMessage(groupID string, msg string) error {
 	return nil
 }
 
-// GetSelfInfo 获取机器人自身信息
-func (a *Adapter) GetSelfInfo() (adapter.SelfInfRes, error) {
-	res, err := http.Post(a.httpURL+"/get_self_info", "application/json", nil)
-	if err != nil {
-		return adapter.SelfInfRes{}, err
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	var selfinfo adapter.SelfInfRes
-	err = json.Unmarshal(body, &selfinfo)
-	return selfinfo, nil
-}
+// // GetSelfInfo 获取机器人自身信息
+// func (a *Adapter) GetSelfInfo() (adapter.SelfInfRes, error) {
+// 	res, err := http.Post(a.httpURL+"/get_self_info", "application/json", nil)
+// 	if err != nil {
+// 		return adapter.SelfInfRes{}, err
+// 	}
+// 	defer res.Body.Close()
+// 	body, err := io.ReadAll(res.Body)
+// 	var selfinfo adapter.SelfInfRes
+// 	err = json.Unmarshal(body, &selfinfo)
+// 	return selfinfo, nil
+// }
 
 // GetUserInfo 获取用户信息
 func (a *Adapter) GetUserInfo(userID string) (adapter.UserInfo, error) {

@@ -6,6 +6,8 @@
 
 package bot
 
+import "fmt"
+
 // PluginInfo 插件模块信息
 type PluginInfo struct {
 	Name      string
@@ -20,12 +22,17 @@ type Plugin interface {
 	Register(b *Bot)
 }
 
-// OnMessage 为插件注册功能
+// OnMessage 注册单次回复
 func (p *PluginInfo) OnMessage(h Handler) *Responder {
-	r := &Responder{Handler: h}
+	r := &Responder{
+		Type:    "Message",
+		Handler: h,
+	}
 	p.Respond = append(p.Respond, r)
 	return r
 }
+
+// OnChat 注册一轮会话
 func (p *PluginInfo) OnChat(h Handler) *Responder {
 	r := &Responder{
 		Type:      "Chat",
@@ -35,3 +42,31 @@ func (p *PluginInfo) OnChat(h Handler) *Responder {
 	p.Respond = append(p.Respond, r)
 	return r
 }
+
+// OnRule 添加规则
+func (r *Responder) OnRule(rule ...Rule) *Responder {
+	r.Rules = rule
+	fmt.Println(r)
+	return r
+}
+
+// OnCron 定时任务注册（6位cron表达式：秒 分 时 日 月 周）
+func (p *PluginInfo) OnCron(spec string, h Handler) *Responder {
+	r := &Responder{
+		Type:    "Cron",
+		Handler: h,
+		Timing:  spec,
+	}
+	p.Respond = append(p.Respond, r)
+	return r
+}
+
+// ++++++++++++++++++++++++定时任务++++++++++++++++++++++++
+// OnCron 定时任务注册（6位cron表达式：秒 分 时 日 月 周）
+// func (b *Bot) OnCron(spec string, h Handler) {
+// 	b.addMatcher(Responder{
+// 		Type:    "cron",
+// 		Pattern: spec,
+// 		Handler: h,
+// 	})
+// }

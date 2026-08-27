@@ -66,6 +66,7 @@ func (a *Adapter) ReadMessage(ch chan *adapter.Event) error {
 		if err != nil {
 			log.Println(err, "ws连接出错，自动尝试重新连接")
 			a.Connect()
+			continue
 
 		}
 		log.Println(string(message))
@@ -404,7 +405,7 @@ func (a *Adapter) SetGroupName(groupID int64, groupName string) error {
 		"group_id":   groupID,
 		"group_name": groupName,
 	}
-	_, err := a.CallAction("set_group_card", params)
+	_, err := a.CallAction("set_group_name", params)
 	return err
 }
 
@@ -432,7 +433,7 @@ func (a *Adapter) SetGroupSpecialTitle(groupID int64, userID int64, specialTitle
 		"special_title": specialTitle,
 		"duration":      duration,
 	}
-	_, err := a.CallAction("set_group_member", params)
+	_, err := a.CallAction("set_group_special_title", params)
 	return err
 }
 
@@ -541,9 +542,10 @@ type GetGroupInfoData struct {
 // GetGroupInfo 获取群信息
 // group_id	number	-	群号
 // no_cache	boolean	false	是否不使用缓存（使用缓存可能更新不及时，但响应更快）
-func (a *Adapter) GetGroupInfo(groupID int64, noCache bool) (GetGroupInfoData, error) {
+func (a *Adapter) GetGroupInfo(groupID string, noCache bool) (GetGroupInfoData, error) {
+	groupIDInt64, err := strconv.ParseInt(groupID, 10, 64)
 	params := map[string]interface{}{
-		"group_id": groupID,
+		"group_id": groupIDInt64,
 		"no_cache": noCache,
 	}
 	res, err := a.CallAction("get_group_info", params)
@@ -670,8 +672,8 @@ type GetGroupHonorInfoData struct {
 type CurrentTalkative struct {
 	user_id  int64  `json:"user_id"`
 	Nickname string `json:"nickname"`
-	Avatar   string
-	DayCount int32 `json:"day_count"`
+	Avatar   string `json:"avatar"`
+	DayCount int32  `json:"day_count"`
 }
 
 // GetGroupHonorInfolist  获取群荣誉信息:历史龙王等数据的类型

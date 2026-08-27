@@ -9,7 +9,6 @@ package bot
 import (
 	"fmt"
 	"github.com/milkcandyxxxx/Kumobot/adapter"
-	"github.com/milkcandyxxxx/Kumobot/bot/ON11"
 	"sort"
 )
 
@@ -35,20 +34,18 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 		return
 	}
 	ctx := &Ctx{}
-	// 枚举所有支持的协议类型
-	switch a := b.Adapter.(type) {
-	case *ON11.ON11:
-		a.Event = event
-		// 这里ctx中的ON11不能直接使用 a ，
-		// a中的event的地址类型，如果写入就会导致新消息到来时，
-		// 所有ctx的event都会变化，所以这里写入值而非地址
-		ctx = &Ctx{
-			Bot: b, ON11: &ON11.ON11{
-				Adapter: a.Adapter,
-				Event:   event,
-			}, Event: event,
-		}
+	// // 枚举所有支持的协议类型
+	// switch a := b.Adapter.(type) {
+	// case *ON11.ON11:
+	// 	a.Event = event
+	// 	// 这里ctx中的ON11不能直接使用 a ，
+	// 	// a中的event的地址类型，如果写入就会导致新消息到来时，
+	// 	// 所有ctx的event都会变化，所以这里写入值而非地址
+	ctx = &Ctx{
+		Bot:   b,
+		Event: event,
 	}
+	// }
 	// 按照优先级排序
 	sort.Slice(b.Plugins, func(i, j int) bool {
 		return b.Plugins[i].Priority > b.Plugins[j].Priority
@@ -57,11 +54,15 @@ func (b *Bot) Dispatch(event *adapter.Event) {
 	for _, p := range b.Plugins {
 		// 遍历插件规则
 		for _, m := range p.Respond {
+			if m.Type == "Cron" {
+				continue
+			}
 			if checkMatcher(ctx, m) {
-				if m.LifeCycle {
+				switch m.Type {
+				case "Chat":
 					b.CreateChathistoryChannel(ctx)
 					go m.HandlerFlow(ctx)
-				} else {
+				case "Message":
 					go m.HandlerFlow(ctx)
 				}
 			}

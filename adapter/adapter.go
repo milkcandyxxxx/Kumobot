@@ -26,7 +26,7 @@ type Adapter interface {
 }
 
 // NewOneBot11Adapter   新建适配器结构体
-func NewAdapter(agreementName string) *AdapterInfo {
+func InitializeAdapterInformation(agreementName string) *AdapterInfo {
 	return &AdapterInfo{
 		WsUrl: GlobalConfig.Agreement[agreementName].WebSocket.WsURL,
 		// HttpURL:      GlobalConfig.Agreement[agreementName].WsURL,
