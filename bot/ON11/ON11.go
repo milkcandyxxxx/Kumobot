@@ -8,9 +8,10 @@ package ON11
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/milkcandyxxxx/Kumobot/adapter/onebot11"
 	"github.com/milkcandyxxxx/Kumobot/bot"
-	"strconv"
 )
 
 type Ctx struct {
@@ -82,7 +83,7 @@ func (o *CronCtx) SendGroupMessageAt(groupID string, msg string) (int64, error) 
 		{
 			"type": "text",
 			"data": map[string]interface{}{
-				"text": msg,
+				"text": " " + msg, // 多加一个空格看起来舒服点
 			},
 		},
 	}
